@@ -1,6 +1,6 @@
 {
     "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-    "name": "Roan's CC Plugins",
+    "name": "roans-cc-plugins",
     "description": "Voor mijn beste maatjes",
     "owner": {
         "name": "Roan de Graaf",
