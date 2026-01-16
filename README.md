@@ -15,7 +15,7 @@ A Claude Code plugin that automatically simplifies and refines Python code for c
 Install directly from this marketplace:
 
 ```bash
-/plugin install python-simplifier@roandegraaf/python-simplifier
+/plugin install python-simplifier@roandegraaf/claude-code-plugins
 ```
 
 Or browse for the plugin in `/plugin > Discover`

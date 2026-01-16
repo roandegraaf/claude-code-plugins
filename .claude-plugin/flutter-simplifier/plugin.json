@@ -1,0 +1,9 @@
+{
+    "name": "flutter-simplifier",
+    "version": "1.0.0",
+    "description": "Agent that simplifies and refines Flutter/Dart code for clarity, consistency, and maintainability while preserving functionality",
+    "author": {
+        "name": "Roan de Graaf",
+        "email": "info@roandegraaf.com"
+    }
+}
