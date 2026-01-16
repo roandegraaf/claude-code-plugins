@@ -1,72 +1,86 @@
-# Python Simplifier
+# Roan's Claude Code Plugins
 
-A Claude Code plugin that automatically simplifies and refines Python code for clarity, consistency, and maintainability while preserving all functionality.
+A collection of Claude Code plugins that automatically simplify and refine code for clarity, consistency, and maintainability while preserving all functionality.
 
-## Features
+## Installation
 
+### Step 1: Add the Marketplace
+
+First, add this plugin marketplace to Claude Code:
+
+```bash
+/plugin marketplace add https://github.com/roandegraaf/claude-code-plugins
+```
+
+### Step 2: Install a Plugin
+
+Then install the plugin you want:
+
+---
+
+## Available Plugins
+
+### 🐍 Python Simplifier
+
+Automatically simplifies and refines Python code with PEP 8 compliance, Pythonic idioms, type hints, and more.
+
+**Install:**
+```bash
+/plugin install python-simplifier@roans-cc-plugins
+```
+
+**Features:**
 - **PEP 8 Compliance**: Enforces Python style guide standards including proper indentation, line length, and naming conventions
 - **Pythonic Idioms**: Applies list/dict/set comprehensions, f-strings, context managers, and other Python best practices
 - **Type Hints**: Adds type annotations for function signatures and complex variables
 - **Import Organization**: Groups and sorts imports according to Python conventions
 - **Code Clarity**: Reduces nesting, eliminates redundancy, and improves naming
 
-## Installation
+---
 
-Install directly from this marketplace:
+### 🦋 Flutter Simplifier
 
+Automatically simplifies and refines Flutter/Dart code with Effective Dart compliance, Flutter best practices, and widget optimization.
+
+**Install:**
 ```bash
-/plugin install python-simplifier@roandegraaf/claude-code-plugins
+/plugin install flutter-simplifier@roans-cc-plugins
 ```
 
-Or browse for the plugin in `/plugin > Discover`
+**Features:**
+- **Effective Dart Compliance**: Enforces Dart style guide standards for formatting, naming, and structure
+- **Flutter Best Practices**: Applies const constructors, proper widget decomposition, and state management patterns
+- **Widget Optimization**: Reduces unnecessary rebuilds and improves widget tree efficiency
+- **Code Clarity**: Reduces nesting, eliminates redundancy, and improves naming
+---
 
 ## Usage
 
-Once installed, the Python Simplifier agent will automatically analyze and refine your recently modified Python code. It operates proactively, applying improvements as you work.
+Once installed, the simplifier agents will automatically analyze and refine your recently modified code. They operate proactively, applying improvements as you work.
 
-### What It Does
+### What They Do
 
-The agent focuses on:
+Each agent focuses on:
 
 1. **Preserving Functionality** - Never changes what the code does, only how it does it
-2. **Applying Python Standards** - PEP 8, PEP 484 (type hints), PEP 257 (docstrings)
-3. **Using Pythonic Idioms** - Comprehensions, `enumerate()`, `zip()`, f-strings, `pathlib.Path`
+2. **Applying Language Standards** - Enforces style guides and best practices for each language
+3. **Using Idiomatic Patterns** - Applies language-specific idioms and modern patterns
 4. **Enhancing Clarity** - Early returns, guard clauses, clear naming, reduced nesting
 5. **Maintaining Balance** - Avoids over-simplification that reduces readability
 
-### Example
-
-**Before:**
-```python
-def get_items(data):
-    result = []
-    for i in range(len(data)):
-        item = data[i]
-        if item['active'] == True:
-            result.append(item['name'])
-    return result
-```
-
-**After:**
-```python
-def get_items(data: list[dict]) -> list[str]:
-    """Extract names of active items from data."""
-    return [item['name'] for item in data if item['active']]
-```
-
-## Configuration
-
-The agent uses the Opus model for high-quality code analysis. This can be configured in the agent definition.
-
-## Plugin Structure
+## Repository Structure
 
 ```
-python-simplifier/
+claude-code-plugins/
 ├── .claude-plugin/
-│   ├── plugin.json        # Plugin metadata
-│   └── marketplace.json   # Marketplace configuration
+│   ├── marketplace.json       # Marketplace configuration
+│   ├── python-simplifier/
+│   │   └── plugin.json        # Python plugin metadata
+│   └── flutter-simplifier/
+│       └── plugin.json        # Flutter plugin metadata
 ├── agents/
-│   └── python-simplifier.md  # Agent definition
+│   ├── python-simplifier.md   # Python agent definition
+│   └── flutter-simplifier.md  # Flutter agent definition
 ├── README.md
 └── LICENSE
 ```
