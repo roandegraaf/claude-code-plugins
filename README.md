@@ -73,11 +73,7 @@ Build WordPress websites using Roots Sage 10/11 with ACF Pro blocks, Tailwind CS
 - **WordPress Standards**: Escaping, naming conventions, and query patterns
 
 **Usage:**
-```bash
-/sage-wordpress-builder
-```
-
-Use this skill when creating ACF blocks, Blade components, or working with Sage/Roots projects.
+This skill is automatically activated when working on Sage/WordPress projects. Claude will use these conventions when you ask to create ACF blocks, Blade components, or work with the Sage/Roots ecosystem.
 
 ---
 
@@ -97,7 +93,7 @@ Each agent focuses on:
 
 ### Skills (sage-wordpress-builder)
 
-Skills provide specialized knowledge and workflows. Invoke them with their command name or let Claude use them automatically based on context.
+Skills provide specialized knowledge and workflows. Claude automatically uses installed skills when the task matches the skill's description - no command needed. Just ask Claude to create an ACF block or work on a Sage project, and it will apply the conventions from the skill.
 
 ## Repository Structure
 
