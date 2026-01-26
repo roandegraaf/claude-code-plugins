@@ -1,35 +1,46 @@
 {
-    "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
     "name": "roans-cc-plugins",
-    "description": "Voor mijn beste maatjes",
     "owner": {
         "name": "Roan de Graaf",
         "email": "info@roandegraaf.com"
+    },
+    "metadata": {
+        "description": "Roan's Claude Code plugins - agents and skills for development",
+        "version": "1.0.0"
     },
     "plugins": [
         {
             "name": "python-simplifier",
             "description": "Agent that simplifies and refines Python code for clarity, consistency, and maintainability while preserving functionality",
             "version": "1.0.0",
-            "author": {
-                "name": "Roan de Graaf",
-                "email": "info@roandegraaf.com"
-            },
             "source": "./",
             "category": "productivity",
-            "homepage": "https://github.com/roandegraaf/claude-code-plugins"
+            "strict": false,
+            "agents": [
+                "./agents/python-simplifier.md"
+            ]
         },
         {
             "name": "flutter-simplifier",
             "description": "Agent that simplifies and refines Flutter/Dart code for clarity, consistency, and maintainability while preserving functionality",
             "version": "1.0.0",
-            "author": {
-                "name": "Roan de Graaf",
-                "email": "info@roandegraaf.com"
-            },
             "source": "./",
             "category": "productivity",
-            "homepage": "https://github.com/roandegraaf/claude-code-plugins"
+            "strict": false,
+            "agents": [
+                "./agents/flutter-simplifier.md"
+            ]
+        },
+        {
+            "name": "sage-wordpress-builder",
+            "description": "Build WordPress websites using Roots Sage 10/11 with ACF Pro blocks, Tailwind CSS v4, Laravel Blade templating, and Vite",
+            "version": "1.0.0",
+            "source": "./",
+            "category": "development",
+            "strict": false,
+            "skills": [
+                "./skills/sage-wordpress-builder"
+            ]
         }
     ]
 }
