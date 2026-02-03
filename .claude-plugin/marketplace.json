@@ -32,6 +32,17 @@
             ]
         },
         {
+            "name": "php-wordpress-simplifier",
+            "description": "Agent that simplifies and refines PHP WordPress plugin code for clarity, consistency, security, and maintainability while preserving functionality",
+            "version": "1.0.0",
+            "source": "./",
+            "category": "productivity",
+            "strict": false,
+            "agents": [
+                "./agents/php-wordpress-simplifier.md"
+            ]
+        },
+        {
             "name": "sage-wordpress-builder",
             "description": "Build WordPress websites using Roots Sage 10/11 with ACF Pro blocks, Tailwind CSS v4, Laravel Blade templating, and Vite",
             "version": "1.0.0",
