@@ -1,0 +1,16 @@
+{
+  "name": "task-orchestrator",
+  "version": "1.0.0",
+  "description": "Orchestrate large, complex tasks with intelligent subagent delegation, parallel processing, and automatic verification",
+  "author": "Claude Code Plugins",
+  "homepage": "https://github.com/anthropics/claude-code-plugins",
+  "keywords": [
+    "orchestration",
+    "subagents",
+    "parallel-processing",
+    "task-management",
+    "code-simplification",
+    "plan-implementation"
+  ],
+  "license": "MIT"
+}

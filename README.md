@@ -55,6 +55,43 @@ Automatically simplifies and refines Flutter/Dart code with Effective Dart compl
 
 ---
 
+### 🍎 Swift Simplifier
+
+Automatically simplifies and refines Swift 6 code with API Design Guidelines compliance, concurrency safety preservation, and idiomatic patterns.
+
+**Install:**
+```bash
+/plugin install swift-simplifier@roans-cc-plugins
+```
+
+**Features:**
+- **Swift API Design Guidelines**: Enforces Apple's naming conventions (noun phrases, imperative verbs, fluent usage)
+- **Concurrency Safety**: Preserves all Swift 6 concurrency annotations (`Sendable`, actors, `async`/`await`, `@MainActor`)
+- **Swift Best Practices**: Applies guard statements, optional chaining, collection APIs, protocol-oriented design
+- **Type Safety**: Maintains generics, property wrappers, and memory modifiers
+- **Code Clarity**: Reduces nesting, eliminates redundancy, and improves naming
+
+---
+
+### 🐘 PHP WordPress Simplifier
+
+Automatically simplifies and refines PHP WordPress plugin code with WPCS compliance, security best practices, and modern PHP patterns.
+
+**Install:**
+```bash
+/plugin install php-wordpress-simplifier@roans-cc-plugins
+```
+
+**Features:**
+- **WordPress Coding Standards**: Enforces WPCS including naming conventions, Yoda conditions, proper spacing, and i18n
+- **Security Best Practices**: Ensures proper sanitization, escaping, nonce verification, and capability checks
+- **Modern PHP**: Applies PHP 7.4+ features like type declarations, null coalescing, and arrow functions
+- **Plugin Architecture**: Follows proper WordPress plugin structure with OOP and namespaces
+- **Performance**: Implements caching with transients and object cache, optimizes database queries
+- **Code Clarity**: Reduces nesting, eliminates redundancy, and improves naming
+
+---
+
 ### 🌿 Sage WordPress Builder
 
 Build WordPress websites using Roots Sage 10/11 with ACF Pro blocks, Tailwind CSS v4, Laravel Blade templating, and Vite.
@@ -79,7 +116,7 @@ This skill is automatically activated when working on Sage/WordPress projects. C
 
 ## Usage
 
-### Agents (python-simplifier, flutter-simplifier)
+### Agents (python-simplifier, flutter-simplifier, swift-simplifier, php-wordpress-simplifier)
 
 Once installed, the simplifier agents will automatically analyze and refine your recently modified code. They operate proactively, applying improvements as you work.
 
@@ -102,8 +139,10 @@ claude-code-plugins/
 ├── .claude-plugin/
 │   └── marketplace.json       # Marketplace configuration
 ├── agents/
-│   ├── python-simplifier.md   # Python agent definition
-│   └── flutter-simplifier.md  # Flutter agent definition
+│   ├── python-simplifier.md          # Python agent definition
+│   ├── flutter-simplifier.md         # Flutter agent definition
+│   ├── swift-simplifier.md           # Swift agent definition
+│   └── php-wordpress-simplifier.md   # PHP WordPress agent definition
 ├── skills/
 │   └── sage-wordpress-builder/
 │       ├── SKILL.md           # Skill definition
