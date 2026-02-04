@@ -2,7 +2,10 @@
   "name": "task-orchestrator",
   "version": "1.0.0",
   "description": "Orchestrate large, complex tasks with intelligent subagent delegation, parallel processing, and automatic verification",
-  "author": "Claude Code Plugins",
+  "author": {
+    "name": "Roan de Graaf",
+    "email": "info@roandegraaf.nl"
+  },
   "homepage": "https://github.com/anthropics/claude-code-plugins",
   "keywords": [
     "orchestration",
