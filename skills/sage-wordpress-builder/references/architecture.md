@@ -1,5 +1,14 @@
 # Theme Architecture
 
+## Table of Contents
+- [Directory Structure](#directory-structure)
+- [Service Providers](#service-providers)
+- [View Composers](#view-composers)
+- [Theme Setup](#theme-setup-appsetupphp)
+- [Custom Post Types](#custom-post-types)
+- [Vite Configuration](#vite-configuration)
+- [Asset Usage in Blade](#asset-usage-in-blade)
+
 ## Directory Structure
 
 ```

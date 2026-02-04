@@ -1,5 +1,17 @@
 # Blade Components
 
+## Table of Contents
+- [Section Component](#section-component)
+- [Content Components](#content-components)
+- [Subtitle Component](#subtitle-component)
+- [Title Component](#title-component)
+- [Text Component](#text-component)
+- [Buttons Component](#buttons-component)
+- [Button Component](#button-component)
+- [Media Component](#media-component)
+- [Usage in Blocks](#usage-in-blocks)
+- [Blade Directives](#blade-directives)
+
 ## Section Component
 
 Wraps all block content with consistent spacing and background:

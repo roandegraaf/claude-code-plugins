@@ -7,7 +7,9 @@ allowed-tools: Task(*), Read, Glob, Grep, Bash(*), Write, Edit, TaskCreate, Task
 
 # Orchestrated Plan Implementation
 
-You are implementing a multi-step plan using parallel subagents where possible, with verification after each phase.
+Specialized `/orchestrate` command for implementing multi-step plans. Inherits core orchestration behavior (chunking, state management, verification) from `/orchestrate`.
+
+Implement multi-step plans using parallel subagents where possible, with verification after each phase.
 
 ## Arguments
 
@@ -60,54 +62,12 @@ Auto-enable `--verify-ui` for frontend projects.
 
 ## Phase 2: State Initialization
 
-Create `.claude/orchestrator-state.json`:
-
-```json
-{
-  "task_id": "<uuid>",
-  "task_type": "implement",
-  "task_description": "Implement plan from <plan-file>",
-  "status": "executing",
-  "created_at": "<ISO timestamp>",
-  "plan_file": "<path>",
-  "project_type": "<detected type>",
-  "verify_ui": true|false,
-  "chunks": [
-    {
-      "id": "step-<n>",
-      "description": "<step description>",
-      "status": "pending",
-      "plan_section": "<relevant plan text>",
-      "files": ["<files to create/modify>"],
-      "depends_on": ["step-<m>"],
-      "subagent_type": "general-purpose",
-      "attempts": 0,
-      "max_attempts": 3,
-      "stash_name": null
-    }
-  ],
-  "phases": [
-    {
-      "id": "phase-1",
-      "steps": ["step-1", "step-2", "step-3"],
-      "status": "pending",
-      "verification": {
-        "tests_pass": null,
-        "ui_verified": null
-      }
-    }
-  ],
-  "progress": {
-    "total_steps": 0,
-    "completed": 0,
-    "failed": 0
-  },
-  "verification": {
-    "test_command": "<detected>",
-    "ui_checks": []
-  }
-}
-```
+Create `.claude/orchestrator-state.json` following the schema in `/orchestrate` with:
+- `task_type`: `"implement"`
+- `plan_file`: path to the plan file
+- `project_type`: detected project type
+- `verify_ui`: whether UI verification is enabled
+- `phases`: array grouping steps by dependency level
 
 ## Phase 3: Phased Execution
 
@@ -269,6 +229,12 @@ prompt: |
 
 ### Notes
 <any important implementation decisions or deviations>
+```
+
+### remove state file
+
+```bash
+rm .claude/orchestrator-state.json
 ```
 
 ### Partial Completion Output

@@ -1,5 +1,15 @@
 # Chunking Strategies
 
+## Table of Contents
+- [General Principles](#general-principles)
+- [Strategy: Directory-Based Chunking](#strategy-directory-based-chunking)
+- [Strategy: Dependency-Based Chunking](#strategy-dependency-based-chunking)
+- [Strategy: Plan-Based Chunking](#strategy-plan-based-chunking)
+- [Strategy: Test-Based Chunking](#strategy-test-based-chunking)
+- [Chunk Size Guidelines](#chunk-size-guidelines)
+- [Handling Large Files](#handling-large-files)
+- [Chunk Metadata](#chunk-metadata)
+
 Detailed patterns for dividing large tasks into manageable chunks.
 
 ## General Principles

@@ -1,5 +1,23 @@
 # Tailwind CSS v4 Conventions
 
+## Table of Contents
+- [CSS-First Configuration](#css-first-configuration)
+- [Vite Integration](#vite-integration)
+- [Spacing Classes](#spacing-classes)
+- [Background Colors](#background-colors)
+- [Class Ordering Convention](#class-ordering-convention)
+- [Responsive Design](#responsive-design)
+- [Container](#container)
+- [Prose for WYSIWYG Content](#prose-for-wysiwyg-content)
+- [Grid Layouts](#grid-layouts)
+- [Flex Layouts](#flex-layouts)
+- [@class Directive](#class-directive)
+- [Arbitrary Values](#arbitrary-values)
+- [Common Utility Patterns](#common-utility-patterns)
+- [CSS Custom Properties](#css-custom-properties)
+- [Transitions](#transitions)
+- [Best Practices](#best-practices)
+
 ## CSS-First Configuration
 
 Tailwind v4 uses CSS-first configuration. Define theme in `resources/css/app.css`:

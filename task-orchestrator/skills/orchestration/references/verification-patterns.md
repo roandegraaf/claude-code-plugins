@@ -1,5 +1,13 @@
 # Verification Patterns
 
+## Table of Contents
+- [Verification Levels](#verification-levels)
+- [Auto-Detection Logic](#auto-detection-logic)
+- [Verification Scheduling](#verification-scheduling)
+- [Handling Verification Failures](#handling-verification-failures)
+- [Verification State Tracking](#verification-state-tracking)
+- [UI Verification Checklist](#ui-verification-checklist)
+
 Patterns for verifying orchestration results at each stage.
 
 ## Verification Levels

@@ -176,6 +176,12 @@ prompt: "Review all changes made during orchestration task: <task_id>"
 ### 3. Final State Update
 Update state to `complete` or `failed` based on verification results.
 
+### 4. Remove state file
+
+```bash
+rm .claude/orchestrator-state.json
+```
+
 ## Progress Reporting
 
 Use TaskCreate/TaskUpdate to track visible progress:

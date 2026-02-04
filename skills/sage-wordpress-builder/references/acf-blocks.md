@@ -1,5 +1,15 @@
 # ACF Blocks
 
+## Table of Contents
+- [BaseBlock Class](#baseblock-class)
+- [Block PHP Class Pattern](#block-php-class-pattern)
+- [Block Properties](#block-properties)
+- [Block Supports Array](#block-supports-array)
+- [Block Blade Template Pattern](#block-blade-template-pattern)
+- [Common Blocks](#common-blocks)
+- [with() Method Pattern](#with-method-pattern)
+- [Returned Variables](#returned-variables)
+
 ## BaseBlock Class
 
 All blocks extend `BaseBlock` which provides common field extraction:

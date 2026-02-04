@@ -7,7 +7,9 @@ allowed-tools: Task(*), Read, Glob, Grep, Bash(*), Write, Edit, TaskCreate, Task
 
 # Orchestrated Codebase Simplification
 
-You are orchestrating a large-scale code simplification task using parallel subagents.
+Specialized `/orchestrate` command for code simplification. Inherits core orchestration behavior (chunking, state management, verification) from `/orchestrate`.
+
+Orchestrate large-scale code simplification using parallel subagents.
 
 ## Arguments
 
@@ -37,6 +39,8 @@ Use Glob patterns based on detected/specified language:
 - Python: `**/*.py`
 - TypeScript: `**/*.ts`, `**/*.tsx`
 - JavaScript: `**/*.js`, `**/*.jsx`
+- PHP: `**/*.php`
+- Swift: `**/*.swift`
 - Go: `**/*.go`
 - Rust: `**/*.rs`
 
@@ -67,41 +71,11 @@ Group files by directory, respecting:
 
 ## Phase 2: State Initialization
 
-Create `.claude/orchestrator-state.json`:
-
-```json
-{
-  "task_id": "<uuid>",
-  "task_type": "simplify",
-  "task_description": "Simplify codebase at <path>",
-  "status": "executing",
-  "created_at": "<ISO timestamp>",
-  "language": "<detected or specified>",
-  "source_path": "<path>",
-  "chunks": [
-    {
-      "id": "chunk-<n>",
-      "description": "Simplify <directory>",
-      "status": "pending",
-      "files": ["<file paths>"],
-      "depends_on": [],
-      "subagent_type": "<language>-simplifier or code-simplifier",
-      "attempts": 0,
-      "max_attempts": 3,
-      "stash_name": null
-    }
-  ],
-  "progress": {
-    "total_chunks": 0,
-    "completed": 0,
-    "failed": 0
-  },
-  "verification": {
-    "test_command": "<detected>",
-    "tests_pass": null
-  }
-}
-```
+Create `.claude/orchestrator-state.json` following the schema in `/orchestrate` with:
+- `task_type`: `"simplify"`
+- `language`: detected or specified language
+- `source_path`: target path
+- `subagent_type`: `<language>-simplifier` or `code-simplifier`
 
 ## Phase 3: Parallel Execution
 
@@ -181,7 +155,13 @@ TaskCreate: "Orchestrate simplification of <path>"
 <test command>
 ```
 
-### 4.2 Optional Code Review
+### 4.2 Final Build Run
+
+```bash
+<build command>
+```
+
+### 4.3 Optional Code Review
 
 If tests pass, optionally launch code reviewer:
 
@@ -201,6 +181,12 @@ prompt: |
 ```
 
 ## Phase 5: Completion
+
+### remove state file
+
+```bash
+rm .claude/orchestrator-state.json
+```
 
 ### Success Output
 

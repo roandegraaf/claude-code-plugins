@@ -1,5 +1,16 @@
 # Scroll Animations
 
+## Table of Contents
+- [Dependencies](#dependencies)
+- [GSAP + Lenis Setup](#gsap--lenis-setup)
+- [Reveal Animation Function](#reveal-animation-function)
+- [Blade Usage](#blade-usage)
+- [Data Attributes](#data-attributes)
+- [Block Template Example](#block-template-example)
+- [Grid Animation Example](#grid-animation-example)
+- [Alternative: Individual Element Animations](#alternative-individual-element-animations)
+- [Performance Tips](#performance-tips)
+
 ## Dependencies
 
 ```bash

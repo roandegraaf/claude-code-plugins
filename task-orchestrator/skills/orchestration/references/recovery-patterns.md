@@ -1,5 +1,15 @@
 # Recovery Patterns
 
+## Table of Contents
+- [Recovery Philosophy](#recovery-philosophy)
+- [Git Stash Strategy](#git-stash-strategy)
+- [Failure Types and Recovery](#failure-types-and-recovery)
+- [Retry Strategy](#retry-strategy)
+- [Dependency Failure Handling](#dependency-failure-handling)
+- [Session Interruption Recovery](#session-interruption-recovery)
+- [Catastrophic Failure Recovery](#catastrophic-failure-recovery)
+- [Error Escalation](#error-escalation)
+
 Patterns for recovering from failures during orchestration.
 
 ## Recovery Philosophy

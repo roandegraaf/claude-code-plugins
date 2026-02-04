@@ -161,6 +161,12 @@ All changes verified. Consider:
 3. Clean up state: rm .claude/orchestrator-state.json
 ```
 
+### Remove state file
+
+```bash
+rm .claude/orchestrator-state.json
+```
+
 ---
 
 **CHECK STATUS FOR:** $ARGUMENTS

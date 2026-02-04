@@ -1,11 +1,17 @@
 ---
 name: orchestration
-description: Knowledge base for task orchestration with subagent delegation
+description: >
+  Knowledge base for orchestrating large tasks using parallel subagent delegation with automatic
+  chunking, verification, and recovery. Use when: (1) Dividing codebases into parallel work chunks,
+  (2) Managing subagent delegation for simplification or implementation, (3) Implementing
+  verification patterns with tests and linting, (4) Recovering from chunk failures with git stash
+  rollback, (5) Tracking orchestration state and progress, (6) Handling dependency-ordered execution,
+  (7) Resuming interrupted orchestrations, (8) Selecting appropriate subagent types for different tasks.
 ---
 
 # Task Orchestration Skill
 
-This skill provides knowledge for orchestrating large tasks using parallel subagent delegation.
+Orchestrate large tasks using parallel subagent delegation with automatic chunking, verification, and recovery.
 
 ## Core Principles
 
