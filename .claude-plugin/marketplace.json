@@ -6,7 +6,7 @@
     },
     "metadata": {
         "description": "Roan's Claude Code plugins - agents and skills for development",
-        "version": "1.0.0"
+        "version": "1.0.1"
     },
     "plugins": [
         {
@@ -78,7 +78,7 @@
         {
             "name": "task-orchestrator",
             "description": "Orchestrate large, complex tasks with intelligent subagent delegation, parallel processing, and automatic verification",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": "./task-orchestrator",
             "category": "productivity",
             "strict": false

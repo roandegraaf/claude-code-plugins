@@ -62,12 +62,54 @@ Auto-enable `--verify-ui` for frontend projects.
 
 ## Phase 2: State Initialization
 
-Create `.claude/orchestrator-state.json` following the schema in `/orchestrate` with:
-- `task_type`: `"implement"`
-- `plan_file`: path to the plan file
-- `project_type`: detected project type
-- `verify_ui`: whether UI verification is enabled
-- `phases`: array grouping steps by dependency level
+**MANDATORY: Create `.claude/orchestrator-state.json` BEFORE executing any steps.**
+
+First, ensure the directory exists:
+```bash
+mkdir -p .claude
+```
+
+Then create the state file with this structure:
+
+```json
+{
+  "task_id": "<uuid>",
+  "task_type": "implement",
+  "plan_file": "<path to plan file>",
+  "project_type": "<frontend|backend|fullstack|cli>",
+  "status": "executing",
+  "created_at": "<ISO timestamp>",
+  "verify_ui": false,
+  "phases": [
+    {
+      "id": "phase-1",
+      "description": "<phase description>",
+      "status": "pending",
+      "steps": [
+        {
+          "id": "step-1",
+          "description": "<step description>",
+          "status": "pending",
+          "files": ["<file paths>"],
+          "depends_on": [],
+          "attempts": 0,
+          "max_attempts": 3
+        }
+      ]
+    }
+  ],
+  "progress": {
+    "total_steps": 0,
+    "completed": 0,
+    "failed": 0,
+    "in_progress": 0
+  },
+  "verification": {
+    "test_command": "<detected test command>",
+    "tests_pass": null
+  }
+}
+```
 
 ## Phase 3: Phased Execution
 
@@ -78,16 +120,35 @@ Group steps into phases based on dependencies:
 - **Phase 2**: Steps depending only on Phase 1 steps
 - **Phase N**: Steps depending on Phase N-1 steps
 
-### 3.2 Step Execution
+### 3.2 Parallel Batch Processing
 
-For each step, launch a subagent:
+**CRITICAL: You MUST use the Task tool to launch subagents in parallel.** For each phase:
+
+1. Identify all independent steps in the phase
+2. **Launch up to 20 subagents IN PARALLEL using multiple Task tool calls in a SINGLE message**
+3. Wait for all subagents in the batch to complete
+4. Update state with results
+5. Run phase verification
+6. Proceed to next phase
+
+**Pre-step setup (for each step):**
+```bash
+git stash push -m "orchestrator-implement-step-<id>" -- <files to be modified>
+```
+
+### 3.3 Step Execution via Subagents
+
+For EACH step, use the Task tool. **Launch all independent steps in parallel within a single message:**
 
 ```yaml
-subagent_type: general-purpose  # or specialized based on step type
-description: "Implement <step summary>"
+# EXAMPLE: If Phase 1 has 3 independent steps, send ONE message with THREE Task tool calls:
+
+# Task 1:
+subagent_type: general-purpose
+description: "Implement <step-1 summary>"
 prompt: |
   ## Implementation Task
-  <step description from plan>
+  <step-1 description from plan>
 
   ## Plan Context
   <relevant section from plan file>
@@ -105,18 +166,41 @@ prompt: |
   ## Testing
   After implementation, run: <test command>
 
-  If tests exist for this feature, ensure they pass.
-  If no tests exist, note what should be tested.
-
   ## Completion
   Report:
   - Files created/modified
   - Key implementation decisions
   - Any deviations from plan (with justification)
-  - Suggested tests if none exist
+
+# Task 2 (IN SAME MESSAGE):
+subagent_type: general-purpose
+description: "Implement <step-2 summary>"
+prompt: |
+  <same structure for step 2>
+
+# Task 3 (IN SAME MESSAGE):
+subagent_type: general-purpose
+description: "Implement <step-3 summary>"
+prompt: |
+  <same structure for step 3>
 ```
 
-### 3.3 Phase Verification
+**Subagent type:** Always use `general-purpose` for implementation tasks. It has access to all necessary tools for code implementation.
+
+### 3.4 Progress Tracking
+
+Create visible tasks to track progress:
+
+```
+TaskCreate: "Implement <plan summary>"
+  └── TaskCreate: "Phase 1: <phase description>"
+  └── TaskCreate: "Phase 2: <phase description>"
+  ...
+```
+
+Update task status as each subagent completes.
+
+### 3.5 Phase Verification
 
 After each phase completes:
 
