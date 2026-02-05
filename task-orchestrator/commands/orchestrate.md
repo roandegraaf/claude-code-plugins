@@ -1,8 +1,8 @@
 ---
 name: orchestrate
-description: Orchestrate a large task with intelligent subagent delegation and parallel processing
-argument-hint: <task-description>
-allowed-tools: Task(*), Read, Glob, Grep, Bash(*), Write, Edit, TaskCreate, TaskUpdate, TaskList, TaskGet
+description: Orchestrate a large task with intelligent subagent delegation, agent team coordination, and parallel processing
+argument-hint: <task-description> [--team] [--no-team]
+allowed-tools: Task(*), Read, Glob, Grep, Bash(*), Write, Edit, TaskCreate, TaskUpdate, TaskList, TaskGet, Teammate(*), SendMessage(*)
 ---
 
 # Task Orchestrator
@@ -45,6 +45,46 @@ Use Glob and Grep to understand the scope:
 3. Map dependencies between files/modules
 4. Detect test framework and commands
 5. Identify shared/core modules that others depend on
+```
+
+### Step 2.5: Execution Strategy Decision
+
+Determine whether to use **subagents** (default) or **Agent Teams** for execution.
+
+**First, check the environment variable:**
+```bash
+echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
+```
+
+If not set to `1` or `--no-team` flag is present, always use subagent mode. Skip to Step 3.
+If `--team` flag is present (and env var is set), force team mode.
+
+**Use Agent Teams when ALL of these are true:**
+- 3+ distinct areas that need separate work
+- Each area owns separate files (zero overlap)
+- Cross-area coordination or interface contracts are needed
+- High complexity requiring independent agent context
+
+**Use Subagents when ANY of these is true:**
+- Single area of focus
+- Sequential steps that must run in order
+- Multiple steps touch the same files
+- Mechanical/repetitive changes (e.g., simplification, migrations)
+- Fewer than 4 steps total
+
+| Criteria | → Subagents | → Agent Teams |
+|----------|-------------|---------------|
+| Areas | 1-2 | 3+ |
+| File overlap | Any overlap | Zero overlap |
+| Communication | None needed | Interfaces/contracts |
+| Task nature | Mechanical | Creative/complex |
+| Steps | <4 | 4+ |
+
+Record the decision in the state file:
+```json
+{
+  "execution_strategy": "team|subagent"
+}
 ```
 
 ### Step 3: Create Execution Plan
@@ -91,6 +131,9 @@ Create state file at `.claude/orchestrator-state.json`:
     "tests_pass": null,
     "review_status": null
   },
+  "execution_strategy": "subagent|team",
+  "team_name": null,
+  "teammates": [],
   "config": {
     "max_parallel": 20,
     "max_files_per_chunk": 20,
@@ -99,7 +142,9 @@ Create state file at `.claude/orchestrator-state.json`:
 }
 ```
 
-## Execution Phase
+## Execution Phase: Subagent Mode
+
+> Use this when `execution_strategy` is `"subagent"` (the default).
 
 ### Batch Processing
 
@@ -156,9 +201,140 @@ On chunk failure:
 3. Log error in state
 4. Continue with other chunks (unless critical)
 
+## Execution Phase: Agent Team Mode
+
+> Use this when `execution_strategy` is `"team"`. Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.
+
+### 1. Team Setup
+
+Create the team:
+```yaml
+Teammate:
+  operation: spawnTeam
+  team_name: "orchestrator-<task_id>"
+  description: "<task description>"
+```
+
+Record `team_name` in state file.
+
+### 2. Define Teammate Roles
+
+Choose a team pattern based on the task:
+
+| Pattern | Teammates | When |
+|---------|-----------|------|
+| Full-stack | `frontend-dev`, `backend-dev`, `test-writer` | Frontend + backend features |
+| Module | `module-X-dev`, `module-Y-dev`, `integrator` | Independent modules |
+| Layer | `data-dev`, `logic-dev`, `presentation-dev` | Architectural layers |
+| Specialist | `api-dev`, `auth-dev`, `infra-dev` | Different expertise needed |
+
+**Maximum 5 teammates.** Each teammate MUST use `general-purpose` subagent type.
+
+### 3. File Ownership
+
+**Critical rule: No two teammates may edit the same file.**
+
+For each teammate, define explicit file ownership boundaries:
+- List specific directories or file patterns they own
+- Verify zero overlap between any two teammates
+- If overlap is detected, either reassign files or fall back to subagent mode
+- Document ownership in each teammate's prompt
+
+### 4. Create Shared Task List
+
+Use `TaskCreate` for each work item with detailed descriptions including:
+- What to implement
+- Which files to create/modify (within their ownership)
+- Interface contracts with other teammates
+- Success criteria
+
+Assign owners via `TaskUpdate`:
+```yaml
+TaskUpdate:
+  taskId: "<task_id>"
+  owner: "<teammate_name>"
+```
+
+Set up dependencies between tasks:
+```yaml
+TaskUpdate:
+  taskId: "<dependent_task_id>"
+  addBlockedBy: ["<blocking_task_id>"]
+```
+
+### 5. Spawn Teammates
+
+For each teammate, use the Task tool:
+
+```yaml
+Task:
+  subagent_type: general-purpose
+  team_name: "orchestrator-<task_id>"
+  name: "<teammate-name>"
+  description: "<3-5 word role summary>"
+  prompt: |
+    ## Your Role
+    You are <role description> on a team.
+
+    ## File Ownership
+    You own and may ONLY modify:
+    <list of files/directories>
+
+    Do NOT modify any files outside your ownership.
+
+    ## Your Tasks
+    Check the shared task list (TaskList) for tasks assigned to you.
+    Work through them in order, marking each as in_progress then completed.
+
+    ## Interface Contracts
+    <any API contracts, type definitions, or integration points>
+
+    ## Communication
+    - Send messages to teammates via SendMessage if you need information
+    - Report blockers to the team lead immediately
+    - Mark tasks completed via TaskUpdate when done
+
+    ## Completion
+    When all your tasks are complete, wait for further instructions or shutdown.
+```
+
+### 6. Coordinate and Monitor
+
+As team lead, continuously:
+- Monitor `TaskList` for progress and blocked tasks
+- Handle incoming messages from teammates
+- Resolve conflicts or blockers
+- Adjust task assignments if needed
+
+### 7. Integration Phase
+
+After all teammates complete their tasks:
+1. Wire components together (imports, routing, configuration)
+2. Run full test suite
+3. Fix any integration issues
+4. Verify all interface contracts are met
+
+### 8. Shutdown and Cleanup
+
+```yaml
+# For each teammate:
+SendMessage:
+  type: shutdown_request
+  recipient: "<teammate-name>"
+  content: "All tasks complete. Shutting down."
+
+# Wait for all shutdown responses
+
+# Clean up team resources:
+Teammate:
+  operation: cleanup
+```
+
+Update state file: remove teammates, set status to `verifying`.
+
 ## Verification Phase
 
-After all chunks complete:
+After all chunks complete (subagent mode) or after all teammates complete and integration is done (team mode):
 
 ### 1. Run Tests
 ```bash

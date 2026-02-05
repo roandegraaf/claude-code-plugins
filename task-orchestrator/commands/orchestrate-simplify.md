@@ -7,6 +7,8 @@ allowed-tools: Task(*), Read, Glob, Grep, Bash(*), Write, Edit, TaskCreate, Task
 
 # Orchestrated Codebase Simplification
 
+> **Execution Strategy**: Always uses subagent mode. Simplification is focused, independent chunk work where agents don't need to communicate. Agent Teams add overhead with no benefit for this task type.
+
 Specialized `/orchestrate` command for code simplification. Inherits core orchestration behavior (chunking, state management, verification) from `/orchestrate`.
 
 Orchestrate large-scale code simplification using parallel subagents.

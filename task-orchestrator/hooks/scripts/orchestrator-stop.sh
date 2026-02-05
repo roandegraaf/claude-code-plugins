@@ -15,6 +15,25 @@ fi
 # Read state
 STATE=$(cat "$STATE_FILE")
 STATUS=$(echo "$STATE" | jq -r '.status // "unknown"')
+EXECUTION_STRATEGY=$(echo "$STATE" | jq -r '.execution_strategy // "subagent"')
+TEAM_NAME=$(echo "$STATE" | jq -r '.team_name // ""')
+
+# Check if agent team mode is active
+if [ "$EXECUTION_STRATEGY" = "team" ] && [ -n "$TEAM_NAME" ]; then
+    echo "## Agent Team Active"
+    echo ""
+    echo "**Team**: $TEAM_NAME"
+    echo "**Strategy**: Agent Team mode"
+    echo ""
+    echo "### Action Required"
+    echo "You must shut down all teammates before stopping the orchestration."
+    echo "Use \`SendMessage shutdown_request\` to each teammate first."
+    echo "Then use \`Teammate cleanup\` to remove team resources."
+    echo ""
+
+    # Block exit - teammates must be shut down first
+    exit 1
+fi
 
 # Check orchestration status
 case "$STATUS" in

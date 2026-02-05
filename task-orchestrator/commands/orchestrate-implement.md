@@ -1,8 +1,8 @@
 ---
 name: orchestrate-implement
-description: Implement a multi-step plan with verification and iteration
-argument-hint: <plan-file.md> [--verify-ui] [--no-review]
-allowed-tools: Task(*), Read, Glob, Grep, Bash(*), Write, Edit, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__chrome-devtools__*
+description: Implement a multi-step plan with verification, iteration, and optional agent team coordination
+argument-hint: <plan-file.md> [--verify-ui] [--no-review] [--team] [--no-team]
+allowed-tools: Task(*), Read, Glob, Grep, Bash(*), Write, Edit, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__chrome-devtools__*, Teammate(*), SendMessage(*)
 ---
 
 # Orchestrated Plan Implementation
@@ -18,6 +18,8 @@ Parse from: `$ARGUMENTS`
 - **plan-file**: Path to markdown file containing the implementation plan
 - **--verify-ui**: Enable UI verification via chrome-devtools MCP (auto-enabled for frontend projects)
 - **--no-review**: Skip code review after completion
+- **--team**: Force agent team mode (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`)
+- **--no-team**: Force subagent mode (override auto-detection)
 
 ## Critical Constraints
 
@@ -60,6 +62,70 @@ Check for:
 
 Auto-enable `--verify-ui` for frontend projects.
 
+## Phase 1.5: Execution Strategy Decision
+
+Determine whether to use subagents or Agent Teams for this plan.
+
+### Check Environment
+
+```bash
+echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
+```
+
+If not set to `1` or `--no-team` flag is present, always use subagent mode. Skip to Phase 2.
+
+### Auto-Detection Logic
+
+**Prefer Agent Teams when:**
+- Plan has frontend + backend steps (full-stack work)
+- 3+ independent phases that can run in parallel
+- Separate components/modules with distinct file ownership
+- `--team` flag is present
+
+**Prefer Subagents when:**
+- Sequential plan where steps depend on each other
+- Multiple steps edit the same files
+- Refactoring or simplification tasks
+- `--no-team` flag is present
+- Fewer than 4 total steps
+
+### Team Role Assignment
+
+Based on plan analysis, assign roles:
+
+| Plan Type | Teammates |
+|-----------|-----------|
+| Full-stack | `frontend-dev`, `backend-dev`, `test-writer` |
+| Multi-module | `module-X-dev`, `module-Y-dev`, `integrator` |
+| Multi-layer | `data-dev`, `logic-dev`, `presentation-dev` |
+| Multi-component | `component-X-dev`, `component-Y-dev`, ... |
+
+### File Ownership Mapping
+
+1. Extract all files each plan step will create or modify
+2. Map files to proposed teammate ownership
+3. **Verify zero overlap** — no file may be owned by two teammates
+4. If overlap detected:
+   - Try reassigning steps to eliminate overlap
+   - If overlap cannot be resolved, fall back to subagent mode
+5. Document ownership boundaries clearly
+
+Record the decision:
+```json
+{
+  "execution_strategy": "team|subagent",
+  "team_name": "orchestrator-<task_id>",
+  "teammates": [
+    {
+      "name": "frontend-dev",
+      "role": "Frontend development",
+      "area": "src/components/, src/pages/",
+      "status": "pending"
+    }
+  ]
+}
+```
+
 ## Phase 2: State Initialization
 
 **MANDATORY: Create `.claude/orchestrator-state.json` BEFORE executing any steps.**
@@ -80,6 +146,9 @@ Then create the state file with this structure:
   "status": "executing",
   "created_at": "<ISO timestamp>",
   "verify_ui": false,
+  "execution_strategy": "subagent",
+  "team_name": null,
+  "teammates": [],
   "phases": [
     {
       "id": "phase-1",
@@ -111,14 +180,16 @@ Then create the state file with this structure:
 }
 ```
 
-## Phase 3: Phased Execution
+## Phase 3A: Phased Execution (Subagent Mode)
+
+> Use this when `execution_strategy` is `"subagent"` (the default).
 
 ### 3.1 Phase Processing
 
 Group steps into phases based on dependencies:
-- **Phase 1**: All steps with no dependencies (run in parallel)
-- **Phase 2**: Steps depending only on Phase 1 steps
-- **Phase N**: Steps depending on Phase N-1 steps
+- **Phase 1**: All steps with no dependencies (run in parallel using task agents where possible)
+- **Phase 2**: Steps depending only on Phase 1 steps (run in parallel using task agents where possible)
+- **Phase N**: Steps depending on Phase N-1 steps (run in parallel using task agents where possible)
 
 ### 3.2 Parallel Batch Processing
 
@@ -231,6 +302,142 @@ Check for:
 2. Rollback via stash if configured
 3. Retry with more context about the failure
 4. If retry fails, pause and report
+
+## Phase 3B: Team Execution (Agent Team Mode)
+
+> Use this when `execution_strategy` is `"team"`. Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.
+
+### 3B.1 Team Setup
+
+```yaml
+Teammate:
+  operation: spawnTeam
+  team_name: "orchestrator-<task_id>"
+  description: "Implement: <plan summary>"
+```
+
+### 3B.2 Convert Plan Steps to Shared Tasks
+
+For each step in the plan, create a shared task:
+
+```yaml
+TaskCreate:
+  subject: "<step description>"
+  description: |
+    ## Plan Step
+    <full step content from plan>
+
+    ## Files to Create/Modify
+    <files within this teammate's ownership>
+
+    ## Interface Contracts
+    <any APIs, types, or integration points with other areas>
+
+    ## Success Criteria
+    <what defines completion>
+  activeForm: "Implementing <step summary>"
+```
+
+Set up dependencies and assign owners:
+```yaml
+TaskUpdate:
+  taskId: "<id>"
+  owner: "<teammate-name>"
+  addBlockedBy: ["<blocking-task-ids>"]
+```
+
+### 3B.3 Spawn Teammates
+
+For each teammate defined in Phase 1.5:
+
+```yaml
+Task:
+  subagent_type: general-purpose
+  team_name: "orchestrator-<task_id>"
+  name: "<teammate-name>"
+  description: "<role> for plan implementation"
+  prompt: |
+    ## Your Role
+    You are the <role> implementing part of a plan.
+
+    ## Plan Context
+    <relevant sections of the full plan>
+
+    ## File Ownership
+    You own and may ONLY modify these files/directories:
+    <ownership list>
+
+    Do NOT modify files outside your ownership.
+
+    ## Your Tasks
+    Check TaskList for tasks assigned to you (owner: "<your-name>").
+    Work through them in dependency order:
+    1. Use TaskUpdate to mark task as in_progress before starting
+    2. Implement the task following the plan
+    3. Run tests if applicable: <test command>
+    4. Use TaskUpdate to mark task as completed when done
+
+    ## Interface Contracts
+    <detailed API contracts, shared types, expected inputs/outputs>
+
+    ## Communication
+    - If you need information from another area, SendMessage to the relevant teammate
+    - Report blockers to the team lead immediately
+    - Do not modify files outside your ownership — ask the owner instead
+```
+
+### 3B.4 Monitor and Coordinate
+
+As team lead:
+1. Watch for incoming messages from teammates
+2. Track progress via `TaskList`
+3. Handle integration points:
+   - When teammate A completes an API that teammate B depends on, notify B
+   - Resolve any interface mismatches
+4. Handle blockers:
+   - If a teammate is stuck, provide guidance or reassign
+   - If file ownership conflicts arise, resolve immediately
+
+### 3B.5 Phase Verification
+
+Between phases (if using phased distribution):
+
+**Run Tests:**
+```bash
+<test command>
+```
+
+**Type Check (if applicable):**
+```bash
+tsc --noEmit  # TypeScript
+```
+
+**UI Verification (if enabled):**
+```yaml
+mcp__chrome-devtools__navigate_page: url=<dev server URL>
+mcp__chrome-devtools__take_snapshot
+mcp__chrome-devtools__take_screenshot: filePath=.claude/screenshots/phase-<n>.png
+```
+
+### 3B.6 Graceful Shutdown
+
+After all phases are complete:
+
+```yaml
+# For each teammate:
+SendMessage:
+  type: shutdown_request
+  recipient: "<teammate-name>"
+  content: "All tasks complete. Thank you for your work."
+
+# Wait for all shutdown responses (approve)
+
+# Clean up:
+Teammate:
+  operation: cleanup
+```
+
+Update state: clear teammates array, set team_name to null.
 
 ## Phase 4: Integration Verification
 

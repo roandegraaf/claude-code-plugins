@@ -120,6 +120,48 @@ chunk-4 ────────────────> chunk-7 (blocked)
 - UI Check: N/A
 ```
 
+## Team Mode Status
+
+If `execution_strategy` is `"team"` in the state file, display additional team information:
+
+```
+### Agent Team Status
+
+**Team**: <team_name>
+**Strategy**: Agent Team mode
+
+#### Teammates
+| Name | Role | Status | Tasks Done | Tasks Left |
+|------|------|--------|------------|------------|
+| frontend-dev | Frontend development | active | 3 | 1 |
+| backend-dev | Backend development | active | 2 | 2 |
+| test-writer | Test writing | idle | 0 | 3 |
+
+#### Shared Task List
+- Total Tasks: 11
+- Completed: 5
+- In Progress: 3
+- Pending: 2
+- Blocked: 1
+
+#### Phase Progress
+Phase 1 (Foundation): ✓ Complete
+Phase 2 (Implementation): ◐ In Progress (60%)
+Phase 3 (Integration): ○ Pending
+```
+
+### Team-Specific Actions
+
+If team mode is active, suggest team-relevant actions:
+
+```
+Team mode active. Options:
+- Send message to teammate: Use SendMessage tool
+- Check teammate tasks: /orchestrate-status --verbose
+- If teammate stuck: Send message asking for status update
+- Shutdown team: SendMessage shutdown_request to each teammate, then Teammate cleanup
+```
+
 ## Actions
 
 Based on status, suggest next actions:
