@@ -92,6 +92,26 @@ Automatically simplifies and refines PHP WordPress plugin code with WPCS complia
 
 ---
 
+### 🔴 Laravel Simplifier
+
+Automatically simplifies and refines Laravel PHP code with version-aware conventions (8.x-11.x), security best practices, and idiomatic patterns.
+
+**Install:**
+```bash
+/plugin install laravel-simplifier@roans-cc-plugins
+```
+
+**Features:**
+- **Version-Aware**: Detects Laravel version from `composer.json` and applies appropriate conventions (8.x-11.x)
+- **Laravel Standards**: Enforces PSR-12 + Laravel naming conventions for controllers, models, routes, and database columns
+- **Eloquent Best Practices**: Query scopes, relationships, eager loading, version-appropriate accessor/mutator syntax
+- **Security**: Mass assignment protection, validation, authorization (Policies/Gates), CSRF, SQL injection prevention
+- **Blade Templates**: Components over `@include`, slots, typed props (Laravel 9+)
+- **Architecture Respect**: Works within existing patterns (Repository, Service, Action classes) without forcing changes
+- **Code Clarity**: Reduces nesting, eliminates redundancy, and improves naming
+
+---
+
 ### 🌿 Sage WordPress Builder
 
 Build WordPress websites using Roots Sage 10/11 with ACF Pro blocks, Tailwind CSS v4, Laravel Blade templating, and Vite.
@@ -116,7 +136,7 @@ This skill is automatically activated when working on Sage/WordPress projects. C
 
 ## Usage
 
-### Agents (python-simplifier, flutter-simplifier, swift-simplifier, php-wordpress-simplifier)
+### Agents (python-simplifier, flutter-simplifier, swift-simplifier, php-wordpress-simplifier, laravel-simplifier)
 
 Once installed, the simplifier agents will automatically analyze and refine your recently modified code. They operate proactively, applying improvements as you work.
 
@@ -142,7 +162,8 @@ claude-code-plugins/
 │   ├── python-simplifier.md          # Python agent definition
 │   ├── flutter-simplifier.md         # Flutter agent definition
 │   ├── swift-simplifier.md           # Swift agent definition
-│   └── php-wordpress-simplifier.md   # PHP WordPress agent definition
+│   ├── php-wordpress-simplifier.md   # PHP WordPress agent definition
+│   └── laravel-simplifier.md         # Laravel agent definition
 ├── skills/
 │   └── sage-wordpress-builder/
 │       ├── SKILL.md           # Skill definition

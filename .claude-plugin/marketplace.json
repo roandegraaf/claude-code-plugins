@@ -54,6 +54,17 @@
             ]
         },
         {
+            "name": "laravel-simplifier",
+            "description": "Agent that simplifies and refines Laravel PHP code for clarity, consistency, and maintainability while preserving functionality. Version-aware for Laravel 8-11+",
+            "version": "1.0.0",
+            "source": "./",
+            "category": "productivity",
+            "strict": false,
+            "agents": [
+                "./agents/laravel-simplifier.md"
+            ]
+        },
+        {
             "name": "sage-wordpress-builder",
             "description": "Build WordPress websites using Roots Sage 10/11 with ACF Pro blocks, Tailwind CSS v4, Laravel Blade templating, and Vite",
             "version": "1.0.0",
