@@ -1,6 +1,6 @@
 # Roan's Claude Code Plugins
 
-A collection of Claude Code plugins including agents for code simplification and skills for WordPress development.
+A collection of Claude Code plugins including agents for code simplification, skills for WordPress development, and workflow automation.
 
 ## Installation
 
@@ -134,6 +134,29 @@ This skill is automatically activated when working on Sage/WordPress projects. C
 
 ---
 
+### :arrows_counterclockwise: Linear Workflow
+
+Automate the Linear + Git/GitHub development workflow: pick up issues, create branches, ship PRs, merge and close the loop.
+
+**Install:**
+```bash
+/plugin install linear-workflow@roans-cc-plugins
+```
+
+**Prerequisites:** Linear MCP server (`linear-server`) + GitHub MCP server (or `gh` CLI).
+
+**Commands:**
+- **`/work <issue>`** — Pick up a Linear issue, create a branch, set status to In Progress, and plan implementation
+- **`/ship [msg]`** — Commit changes, push the branch, and create a PR linked to the Linear issue
+- **`/my-issues`** — View your assigned Linear issues grouped by status
+- **`/issue-status`** — Check sync status between Linear, Git, and GitHub PR
+- **`/merge`** — Merge the PR, mark the issue as Done, and clean up the branch
+
+**Usage:**
+Run `/work ENG-123` to start working on an issue. When ready, `/ship` to create a PR. After approval, `/merge` to complete the cycle. Use `/my-issues` to browse your backlog and `/issue-status` to check where things stand.
+
+---
+
 ## Usage
 
 ### Agents (python-simplifier, flutter-simplifier, swift-simplifier, php-wordpress-simplifier, laravel-simplifier)
@@ -151,6 +174,10 @@ Each agent focuses on:
 ### Skills (sage-wordpress-builder)
 
 Skills provide specialized knowledge and workflows. Claude automatically uses installed skills when the task matches the skill's description - no command needed. Just ask Claude to create an ACF block or work on a Sage project, and it will apply the conventions from the skill.
+
+### Workflow Plugins (linear-workflow)
+
+Workflow plugins provide slash commands that automate multi-step development processes. Run `/work`, `/ship`, `/merge`, `/my-issues`, and `/issue-status` to drive the full Linear + Git/GitHub cycle without leaving Claude Code.
 
 ## Repository Structure
 
@@ -174,6 +201,21 @@ claude-code-plugins/
 │           ├── blade-components.md
 │           ├── animations.md
 │           └── tailwind.md
+├── linear-workflow/
+│   ├── .claude-plugin/
+│   │   └── plugin.json           # Plugin metadata
+│   ├── commands/
+│   │   ├── work.md               # /work <issue>
+│   │   ├── ship.md               # /ship [msg]
+│   │   ├── my-issues.md          # /my-issues
+│   │   ├── issue-status.md       # /issue-status
+│   │   └── merge.md              # /merge
+│   └── skills/
+│       └── linear-workflow/
+│           ├── SKILL.md           # Workflow conventions
+│           └── references/
+│               ├── branch-naming.md
+│               └── pr-templates.md
 ├── README.md
 └── LICENSE
 ```
