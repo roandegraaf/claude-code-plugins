@@ -82,6 +82,14 @@
             "source": "./task-orchestrator",
             "category": "productivity",
             "strict": false
+        },
+        {
+            "name": "linear-workflow",
+            "description": "Automate the Linear + Git/GitHub development workflow: pick up issues, create branches, ship PRs, merge and close the loop",
+            "version": "1.0.0",
+            "source": "./linear-workflow",
+            "category": "productivity",
+            "strict": false
         }
     ]
 }
