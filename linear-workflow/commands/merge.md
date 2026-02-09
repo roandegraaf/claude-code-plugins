@@ -82,7 +82,7 @@ This is a safety net — the GitHub integration usually handles this, but we set
 
 Run via Bash:
 ```
-git checkout main && git pull && git branch -d <branch>
+git checkout development && git pull && git branch -d <branch>
 ```
 
 If branch deletion fails (e.g., unmerged commits warning) → warn but continue.

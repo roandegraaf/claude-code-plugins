@@ -50,7 +50,7 @@ Apply branch naming conventions from `references/branch-naming.md`:
 Check if branch already exists (`git branch --list <branch>`).
 
 - **Exists locally:** Ask user if they want to switch to it. If yes → `git checkout <branch>`.
-- **Does not exist:** Run `git checkout main && git pull && git checkout -b <branch>`.
+- **Does not exist:** Run `git checkout development && git pull && git checkout -b <branch>`.
 
 ## Step 8: Update Linear Status
 

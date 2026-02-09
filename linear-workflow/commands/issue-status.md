@@ -29,7 +29,7 @@ If not found → "Issue `<identifier>` not found on Linear." Stop.
 
 Run via Bash:
 - `git branch --show-current` — current branch
-- `git log origin/main..HEAD --oneline` — commits ahead of main (if on a feature branch)
+- `git log origin/development..HEAD --oneline` — commits ahead of development (if on a feature branch)
 
 ## Step 4: Check GitHub PR
 
@@ -72,7 +72,7 @@ Based on the current state, suggest the logical next step:
 
 | State | Suggestion |
 |-------|-----------|
-| No branch / on main | Run `/work <identifier>` to start |
+| No branch / on development | Run `/work <identifier>` to start |
 | Branch exists, no PR | Run `/ship` to create a PR |
 | PR open, checks passing, approved | Run `/merge` to complete |
 | PR open, checks failing | Fix failing checks |

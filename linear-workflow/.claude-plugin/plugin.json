@@ -1,6 +1,6 @@
 {
   "name": "linear-workflow",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Automate the Linear + Git/GitHub development workflow: pick up issues, create branches, ship PRs, merge and close the loop",
   "author": {
     "name": "Roan de Graaf",

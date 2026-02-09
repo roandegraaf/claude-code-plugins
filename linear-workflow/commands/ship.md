@@ -54,11 +54,7 @@ If a PR already exists:
 - Print: "PR already exists: <pr-url>"
 - Stop.
 
-## Step 6: Detect Default Branch
-
-Run `git remote show origin` (Bash) and parse the default branch (usually `main` or `master`).
-
-## Step 7: Create Pull Request
+## Step 6: Create Pull Request
 
 Select the PR template from `references/pr-templates.md` based on issue labels/type:
 - Labels contain `bug` or `fix` → Bug Fix template
@@ -72,7 +68,7 @@ Call `mcp__github__create_pull_request` with:
 - `title`: `<IDENTIFIER>: <issue title>`
 - `body`: filled template
 - `head`: current branch
-- `base`: default branch
+- `base`: `development`
 
 ## Step 8: Link PR to Linear
 
