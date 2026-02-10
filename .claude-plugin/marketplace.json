@@ -78,7 +78,7 @@
         {
             "name": "task-orchestrator",
             "description": "Orchestrate large, complex tasks with intelligent subagent delegation, agent team coordination, parallel processing, and automatic verification",
-            "version": "2.0.0",
+            "version": "2.0.1",
             "source": "./task-orchestrator",
             "category": "productivity",
             "strict": false
