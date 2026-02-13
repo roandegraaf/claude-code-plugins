@@ -83,7 +83,7 @@ array_map($fn, get_posts($args) ?: [])
 ### Dynamic properties
 
 ```php
-// Before (Error in 8.4)
+// Before (deprecated 8.2, Error in 9.0)
 $obj->undeclaredProp = 'value';
 // After — option A: explicit declaration
 class MyClass {
