@@ -383,7 +383,7 @@ register_post_type('project', [
 
 ### Acorn 2.x Alpha + PHP 8.2+
 
-Acorn 2.x alpha is built on Laravel 8 components that use dynamic properties extensively. PHP 8.2 deprecated dynamic properties and PHP 8.4 throws `Error` on them.
+Acorn 2.x alpha is built on Laravel 8 components that use dynamic properties extensively. PHP 8.2+ emits deprecation notices for dynamic properties (will become `Error` in PHP 9.0), which causes issues with strict error reporting.
 
 **Symptoms:** Fatal errors on theme boot, `Cannot create dynamic property` errors in Illuminate classes.
 

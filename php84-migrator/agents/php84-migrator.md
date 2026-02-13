@@ -24,6 +24,7 @@ You will receive:
 - Each fixer agent handles max 20 files
 - Use `general-purpose` subagent type for all subagents (they need Read/Write/Edit/Bash)
 - Always preserve functionality — only apply documented fix patterns
+- Before applying fixes, run `git stash push -m "pre-fix-backup"` as a safety net; on failure, run `git stash pop` to restore
 
 ---
 

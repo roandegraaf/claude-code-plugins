@@ -15,12 +15,11 @@ description: >
 | 8.0 | Type safety | Critical | Union types, `match`, named arguments, nullsafe operator |
 | 8.0 | Null handling | Critical | Stricter null-to-type coercions in internal functions |
 | 8.1 | Enums & fibers | High | Enums, fibers, readonly properties, intersection types |
-| 8.1 | Deprecations | High | Implicit nullable params, `$GLOBALS` restrictions |
-| 8.2 | Dynamic props | Critical | Dynamic properties deprecated (fatal in 8.4) |
+| 8.1 | Deprecations | High | `$GLOBALS` restrictions, null to non-nullable params |
+| 8.2 | Dynamic props | High | Dynamic properties deprecated (Error in 9.0) |
 | 8.2 | Type system | Medium | `true`/`false`/`null` standalone types, DNF types |
 | 8.3 | Typed constants | Medium | Typed class constants, `json_validate()`, `#[Override]` |
-| 8.4 | Dynamic props | Critical | Dynamic properties throw `Error` |
-| 8.4 | Deprecations | High | Implicit nullable removed, new deprecations |
+| 8.4 | Deprecations | High | Implicit nullable params deprecated, new deprecations |
 
 See [references/breaking-changes.md](references/breaking-changes.md) for full details per version.
 
@@ -58,7 +57,7 @@ strlen($var ?? '')
 ### Implicit nullable parameters
 
 ```php
-// Before (deprecated in 8.1, removed in 8.4)
+// Before (deprecated in 8.4, will be removed in 9.0)
 function foo(string $bar = null)
 // After
 function foo(?string $bar = null)
