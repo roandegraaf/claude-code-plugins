@@ -11,8 +11,8 @@ Comprehensive reference for automated migration tooling. Each entry includes det
 **Impact:** TypeError (was silently accepted)
 **Affected functions:** `strlen`, `strpos`, `substr`, `str_contains`, `str_replace`, `strtolower`, `strtoupper`, `trim`, `ltrim`, `rtrim`, `explode`, `implode`, `sprintf`, `str_pad`, `str_repeat`, `str_word_count`, `str_split`, `nl2br`, `ucfirst`, `lcfirst`, `ucwords`, `wordwrap`, `number_format`, `htmlspecialchars`, `htmlentities`, `strip_tags`, `preg_match`, `preg_replace`, `preg_split`
 **Error type:** TypeError
-**Detection:** `grep -rPn '(strlen|strpos|substr|str_contains|str_replace|strtolower|strtoupper|trim|ltrim|rtrim|explode|implode|sprintf|str_pad|str_repeat|str_word_count|str_split|nl2br|ucfirst|lcfirst|ucwords|wordwrap|number_format|htmlspecialchars|htmlentities|strip_tags|preg_match|preg_replace|preg_split)\s*\(' --include='*.php'`
-**Note:** Requires static analysis or runtime checks to confirm null is actually passed. Look for variables that may be null (e.g., from database queries, optional parameters, uninitialized properties).
+**Detection:** `grep -rPn '(strlen|strpos|substr|str_contains|str_replace|strtolower|strtoupper|trim|ltrim|rtrim|explode|implode|sprintf|str_pad|str_repeat|str_word_count|str_split|nl2br|ucfirst|lcfirst|ucwords|wordwrap|number_format|htmlspecialchars|htmlentities|strip_tags|preg_match|preg_replace|preg_split)\s*\(' --include='*.php' --include='*.blade.php'`
+**Note:** Requires static analysis or runtime checks to confirm null is actually passed. Look for variables that may be null (e.g., from `get_field()`, database queries, optional parameters, uninitialized properties). In Sage sites, the most common pattern is indirect: `get_field()` in a block's `with()` method returns null, which is passed to a Blade template variable, which is then used in a string function.
 **Fix:**
 ```php
 // Before
@@ -24,6 +24,40 @@ $lower = strtolower($name);
 $len = strlen($value ?? '');
 $pos = strpos($haystack ?? '', $needle ?? '');
 $lower = strtolower($name ?? '');
+```
+
+### String Concatenation with Null
+
+**Impact:** Deprecation notice (PHP 8.1+), potential TypeError in future versions
+**Error type:** Deprecated
+**Detection:** `grep -rPn '\.\s*\$' --include='*.php' --include='*.blade.php'`
+**Note:** The `.` concatenation operator with null arguments produces a deprecation notice in PHP 8.1+. Commonly occurs when `get_field()` or `get_sub_field()` returns null and is concatenated into HTML strings.
+**Fix:**
+```php
+// Before
+$html = '<div>' . $description . '</div>';
+$output .= get_field('suffix');
+
+// After
+$html = '<div>' . ($description ?? '') . '</div>';
+$output .= (get_field('suffix') ?? '');
+```
+
+### foreach on Nullable Return Values
+
+**Impact:** TypeError when iterating null
+**Error type:** TypeError
+**Detection:** `grep -rPn 'foreach\s*\(\s*(get_field|get_sub_field|get_post_meta|get_option)\s*\(' --include='*.php' --include='*.blade.php'`
+**Note:** Functions like `get_field()` for repeater/relationship fields return null when empty, not an empty array. Passing null to foreach causes a TypeError.
+**Fix:**
+```php
+// Before
+foreach (get_field('items') as $item) {}
+foreach (get_field('items', $post_id) as $item) {}
+
+// After
+foreach (get_field('items') ?: [] as $item) {}
+foreach (get_field('items', $post_id) ?: [] as $item) {}
 ```
 
 ### array_key_exists() No Longer Works on Objects
@@ -585,18 +619,27 @@ Run these commands to scan a codebase for common issues:
 
 ```bash
 # PHP 8.0: create_function removal
-grep -rPn 'create_function\s*\(' --include='*.php' .
+grep -rPn 'create_function\s*\(' --include='*.php' --include='*.blade.php' .
+
+# PHP 8.0: string functions with potentially null args (high false-positive rate — combine with context analysis)
+grep -rPn '(strlen|strpos|strtolower|strtoupper|trim|substr)\s*\(' --include='*.php' --include='*.blade.php' .
+
+# PHP 8.0: string concatenation with potentially null vars
+grep -rPn '\.\s*\$' --include='*.php' --include='*.blade.php' .
+
+# PHP 8.0: foreach on nullable return values (ACF/WP functions)
+grep -rPn 'foreach\s*\(\s*(get_field|get_sub_field|get_post_meta|get_option)\s*\(' --include='*.php' --include='*.blade.php' .
 
 # PHP 8.1: enum keyword conflict
 grep -rPn '(class|interface|trait)\s+enum\b' --include='*.php' .
 
 # PHP 8.2: utf8_encode/utf8_decode removal
-grep -rPn '(utf8_encode|utf8_decode)\s*\(' --include='*.php' .
+grep -rPn '(utf8_encode|utf8_decode)\s*\(' --include='*.php' --include='*.blade.php' .
 
 # PHP 8.2: ${var} interpolation
-grep -rPn '"\$\{[^}]+\}"' --include='*.php' .
+grep -rPn '"\$\{[^}]+\}"' --include='*.php' --include='*.blade.php' .
 
-# PHP 8.2: dynamic properties (requires analysis of matched classes)
+# PHP 8.2: dynamic properties (requires manual analysis of matched classes)
 grep -rPn '^\s*class\s+\w+' --include='*.php' .
 
 # PHP 8.3: get_class() without arguments

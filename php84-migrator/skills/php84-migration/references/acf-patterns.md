@@ -25,6 +25,13 @@ Reference for fixing Advanced Custom Fields usage when migrating PHP 7.4 to 8.4 
 
 **Guard before use**: Wrap in `if ($value)` or use nullsafe operator `?->` before accessing properties, methods, or array keys.
 
+### Prerequisite: acf-json availability
+
+If the theme does not have an `acf-json/` directory, field types cannot be determined automatically. In this case:
+- Fall back to variable name heuristics (see "From Sage block `with()` method context" below)
+- Flag to the developer that manual type verification is recommended
+- Default to conservative fixes: use `?? ''` for likely-string fields, `?: []` for likely-array fields, guard for ambiguous fields
+
 ## 2. Detecting ACF Field Types
 
 ### From acf-json/*.json files
@@ -235,6 +242,40 @@ echo $field_obj['choices'][$field_obj['value']]; // multiple failure points
 $field_obj = get_field_object('color');
 if ($field_obj && isset($field_obj['value'], $field_obj['choices'][$field_obj['value']])) {
     echo $field_obj['choices'][$field_obj['value']];
+}
+```
+
+### Two-Hop Null Flow (Most Common Pattern in Sage)
+
+The dominant source of PHP 8.4 breakage in Sage sites is a two-hop flow:
+
+1. `get_field()` in a block's `with()` method returns `null`
+2. The null value is passed to a Blade template as a variable
+3. The Blade template uses the variable in a string function, concatenation, or foreach
+
+This pattern cannot be detected by grep alone — it requires cross-file analysis:
+
+```
+Block PHP (with() method)          Blade Template
+─────────────────────────         ─────────────────────────
+'title' => get_field('title')  →  {{ strtolower($title) }}     // TypeError!
+'items' => get_field('items')  →  @foreach($items as $item)    // TypeError!
+'name'  => get_field('name')   →  Prefix: {{ $name }}          // Deprecation
+```
+
+**Detection strategy:**
+1. Find all `get_field()` calls in block `with()` methods
+2. For each, determine the field type (from acf-json or heuristics)
+3. Apply null coalescing at the `with()` boundary — this is the safest fix point because it protects all downstream Blade usage
+
+**Fix at the source (with() method), not at each Blade usage:**
+```php
+// Fix HERE — one place protects all Blade template usage
+public function with(): array {
+    return [
+        'title' => get_field('title') ?? '',     // protects strtolower($title) in Blade
+        'items' => get_field('items') ?: [],      // protects @foreach($items) in Blade
+    ];
 }
 ```
 
