@@ -90,6 +90,14 @@
             "source": "./linear-workflow",
             "category": "productivity",
             "strict": false
+        },
+        {
+            "name": "php84-migrator",
+            "description": "Autonomously migrate Bedrock/Sage/ACF WordPress sites from PHP 7.4 to 8.4 with team-based agent delegation",
+            "version": "1.0.0",
+            "source": "./php84-migrator",
+            "category": "development",
+            "strict": false
         }
     ]
 }
