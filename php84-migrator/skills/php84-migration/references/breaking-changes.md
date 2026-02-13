@@ -6,49 +6,18 @@ Comprehensive reference for automated migration tooling. Each entry includes det
 
 ## PHP 8.0
 
-### String Functions Reject Null Arguments
+### Stricter Type Coercion for Internal Functions
 
-**Impact:** TypeError (was silently accepted)
-**Affected functions:** `strlen`, `strpos`, `substr`, `str_contains`, `str_replace`, `strtolower`, `strtoupper`, `trim`, `ltrim`, `rtrim`, `explode`, `implode`, `sprintf`, `str_pad`, `str_repeat`, `str_word_count`, `str_split`, `nl2br`, `ucfirst`, `lcfirst`, `ucwords`, `wordwrap`, `number_format`, `htmlspecialchars`, `htmlentities`, `strip_tags`, `preg_match`, `preg_replace`, `preg_split`
-**Error type:** TypeError
-**Detection:** `grep -rPn '(strlen|strpos|substr|str_contains|str_replace|strtolower|strtoupper|trim|ltrim|rtrim|explode|implode|sprintf|str_pad|str_repeat|str_word_count|str_split|nl2br|ucfirst|lcfirst|ucwords|wordwrap|number_format|htmlspecialchars|htmlentities|strip_tags|preg_match|preg_replace|preg_split)\s*\(' --include='*.php' --include='*.blade.php'`
-**Note:** Requires static analysis or runtime checks to confirm null is actually passed. Look for variables that may be null (e.g., from `get_field()`, database queries, optional parameters, uninitialized properties). In Sage sites, the most common pattern is indirect: `get_field()` in a block's `with()` method returns null, which is passed to a Blade template variable, which is then used in a string function.
-**Fix:**
-```php
-// Before
-$len = strlen($value);
-$pos = strpos($haystack, $needle);
-$lower = strtolower($name);
-
-// After
-$len = strlen($value ?? '');
-$pos = strpos($haystack ?? '', $needle ?? '');
-$lower = strtolower($name ?? '');
-```
-
-### String Concatenation with Null
-
-**Impact:** Deprecation notice (PHP 8.1+), potential TypeError in future versions
-**Error type:** Deprecated
-**Detection:** `grep -rPn '\.\s*\$' --include='*.php' --include='*.blade.php'`
-**Note:** The `.` concatenation operator with null arguments produces a deprecation notice in PHP 8.1+. Commonly occurs when `get_field()` or `get_sub_field()` returns null and is concatenated into HTML strings.
-**Fix:**
-```php
-// Before
-$html = '<div>' . $description . '</div>';
-$output .= get_field('suffix');
-
-// After
-$html = '<div>' . ($description ?? '') . '</div>';
-$output .= (get_field('suffix') ?? '');
-```
+**Impact:** Internal functions now follow standard PHP type coercion rules
+**Error type:** TypeError for clear type mismatches
+**Note:** PHP 8.0 made internal functions stricter about type handling, following the same rules as userland functions. This is a broad change — specific null-to-string handling was deprecated separately in PHP 8.1 (see PHP 8.1 section). The most impactful change for WordPress sites is that `array_key_exists()` no longer works on objects.
 
 ### foreach on Nullable Return Values
 
-**Impact:** TypeError when iterating null
+**Impact:** TypeError when iterating null (has always been the case, but more common with stricter null returns)
 **Error type:** TypeError
 **Detection:** `grep -rPn 'foreach\s*\(\s*(get_field|get_sub_field|get_post_meta|get_option)\s*\(' --include='*.php' --include='*.blade.php'`
-**Note:** Functions like `get_field()` for repeater/relationship fields return null when empty, not an empty array. Passing null to foreach causes a TypeError.
+**Note:** Functions like `get_field()` for repeater/relationship fields return `null` or `false` when empty, not an empty array. Passing null/false to foreach causes a TypeError.
 **Fix:**
 ```php
 // Before
@@ -195,19 +164,26 @@ foreach (array_keys($GLOBALS) as $key) {
 }
 ```
 
-### Null to Non-Nullable Internal Function Parameter Deprecated
+### Passing Null to Non-Nullable Internal Function Parameters Deprecated
 
-**Impact:** Deprecated (will become TypeError)
+**Impact:** Deprecation notice (will become TypeError in PHP 9.0)
 **Error type:** Deprecated
-**Detection:** `grep -rPn '(htmlspecialchars|htmlentities|html_entity_decode|htmlspecialchars_decode|strip_tags|mb_strtolower|mb_strtoupper|mb_convert_case|mb_detect_encoding|mb_strlen|mb_substr|mb_strpos)\s*\(' --include='*.php'`
-**Note:** This affects all internal functions receiving null for non-nullable parameters. Detection requires runtime analysis or type inference.
+**Affected functions:** `strlen`, `strpos`, `substr`, `str_contains`, `str_replace`, `strtolower`, `strtoupper`, `trim`, `ltrim`, `rtrim`, `explode`, `implode`, `sprintf`, `str_pad`, `str_repeat`, `str_word_count`, `str_split`, `nl2br`, `ucfirst`, `lcfirst`, `ucwords`, `wordwrap`, `number_format`, `htmlspecialchars`, `htmlentities`, `strip_tags`, `preg_match`, `preg_replace`, `preg_split`, `mb_strtolower`, `mb_strtoupper`, `mb_convert_case`, `mb_detect_encoding`, `mb_strlen`, `mb_substr`, `mb_strpos`, and all other internal functions with non-nullable parameters
+**Detection:** `grep -rPn '(strlen|strpos|substr|str_contains|str_replace|strtolower|strtoupper|trim|ltrim|rtrim|explode|implode|sprintf|str_pad|str_repeat|str_word_count|str_split|nl2br|ucfirst|lcfirst|ucwords|wordwrap|number_format|htmlspecialchars|htmlentities|strip_tags|preg_match|preg_replace|preg_split)\s*\(' --include='*.php' --include='*.blade.php'`
+**Note:** This is the **most impactful change** for WordPress/ACF sites. Passing null to any internal function parameter typed as non-nullable string emits a deprecation notice in PHP 8.1 and will become a TypeError in PHP 9.0. In Sage sites, the most common pattern is indirect: `get_field()` in a block's `with()` method returns null, which flows to a Blade template variable, which is then used in a string function. Note: the `.` concatenation operator does NOT emit deprecation for null — only function parameters do.
 **Fix:**
 ```php
-// Before
+// Before — all produce deprecation notices in PHP 8.1+
+$len = strlen($value);           // Deprecated if $value is null
+$pos = strpos($haystack, $needle);
+$lower = strtolower($name);
 htmlspecialchars($maybeNull);
 mb_strtolower($maybeNull);
 
-// After
+// After — null coalescing prevents deprecation
+$len = strlen($value ?? '');
+$pos = strpos($haystack ?? '', $needle ?? '');
+$lower = strtolower($name ?? '');
 htmlspecialchars($maybeNull ?? '');
 mb_strtolower($maybeNull ?? '');
 ```
@@ -303,7 +279,7 @@ class User {
 
 ### utf8_encode() and utf8_decode() Deprecated
 
-**Impact:** Deprecated (removed in 8.3+)
+**Impact:** Deprecated in 8.2 (still available through 8.4, will be removed in future PHP version)
 **Error type:** Deprecated
 **Detection:** `grep -rPn '(utf8_encode|utf8_decode)\s*\(' --include='*.php'`
 **Fix:**
@@ -621,13 +597,10 @@ Run these commands to scan a codebase for common issues:
 # PHP 8.0: create_function removal
 grep -rPn 'create_function\s*\(' --include='*.php' --include='*.blade.php' .
 
-# PHP 8.0: string functions with potentially null args (high false-positive rate — combine with context analysis)
-grep -rPn '(strlen|strpos|strtolower|strtoupper|trim|substr)\s*\(' --include='*.php' --include='*.blade.php' .
+# PHP 8.1: null to non-nullable internal function params (high false-positive rate — combine with context analysis)
+grep -rPn '(strlen|strpos|strtolower|strtoupper|trim|substr|str_replace|htmlspecialchars)\s*\(' --include='*.php' --include='*.blade.php' .
 
-# PHP 8.0: string concatenation with potentially null vars
-grep -rPn '\.\s*\$' --include='*.php' --include='*.blade.php' .
-
-# PHP 8.0: foreach on nullable return values (ACF/WP functions)
+# General: foreach on nullable return values (ACF/WP functions)
 grep -rPn 'foreach\s*\(\s*(get_field|get_sub_field|get_post_meta|get_option)\s*\(' --include='*.php' --include='*.blade.php' .
 
 # PHP 8.1: enum keyword conflict

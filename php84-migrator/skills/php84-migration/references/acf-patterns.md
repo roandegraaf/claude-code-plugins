@@ -125,15 +125,15 @@ Template code reveals expected types:
 
 ### get_field() returning null passed to string functions
 
-`get_field()` returns `null` when a field has no value (or the post doesn't exist). On PHP 8.0+, passing `null` to internal string functions like `strlen()`, `strtolower()`, `trim()`, `str_replace()`, etc. triggers a deprecation notice. On PHP 8.4, some of these become errors.
+`get_field()` returns `null` when a field has no value (or the post doesn't exist). As of PHP 8.1, passing `null` to internal string functions like `strlen()`, `strtolower()`, `trim()`, `str_replace()`, etc. emits a deprecation notice. These will become TypeErrors in PHP 9.0. Note: string concatenation with the `.` operator does NOT emit deprecation for null — it silently converts null to empty string.
 
 ```php
-// BEFORE (breaks on 8.0+ with deprecation, error on 8.4 for some)
+// BEFORE (deprecation notice on PHP 8.1+, will be TypeError in 9.0)
 $title = get_field('title');
-echo strlen($title);                    // TypeError if null
-echo strtolower($title);                // TypeError if null
-echo 'Prefix: ' . $title;              // Works but produces "Prefix: " — usually fine
-echo trim($title);                      // TypeError if null
+echo strlen($title);                    // Deprecated: null to non-nullable param
+echo strtolower($title);                // Deprecated: null to non-nullable param
+echo 'Prefix: ' . $title;              // No deprecation — concatenation handles null silently
+echo trim($title);                      // Deprecated: null to non-nullable param
 
 // AFTER
 $title = get_field('title') ?? '';
@@ -251,7 +251,7 @@ The dominant source of PHP 8.4 breakage in Sage sites is a two-hop flow:
 
 1. `get_field()` in a block's `with()` method returns `null`
 2. The null value is passed to a Blade template as a variable
-3. The Blade template uses the variable in a string function, concatenation, or foreach
+3. The Blade template uses the variable in a string function or foreach
 
 This pattern cannot be detected by grep alone — it requires cross-file analysis:
 

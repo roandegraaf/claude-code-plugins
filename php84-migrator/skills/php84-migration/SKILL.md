@@ -12,10 +12,9 @@ description: >
 
 | PHP Version | Category | Impact | Key Change |
 |---|---|---|---|
-| 8.0 | Type safety | Critical | Union types, `match`, named arguments, nullsafe operator |
-| 8.0 | Null handling | Critical | Stricter null-to-type coercions in internal functions |
-| 8.1 | Enums & fibers | High | Enums, fibers, readonly properties, intersection types |
-| 8.1 | Deprecations | High | `$GLOBALS` restrictions, null to non-nullable params |
+| 8.0 | Type safety | High | Union types, `match`, named arguments, nullsafe operator, stricter internal type coercion |
+| 8.1 | Null handling | Critical | Passing null to non-nullable internal function params deprecated (most impactful for WP/ACF) |
+| 8.1 | Enums & fibers | High | Enums, fibers, readonly properties, intersection types, `$GLOBALS` restrictions |
 | 8.2 | Dynamic props | High | Dynamic properties deprecated (Error in 9.0) |
 | 8.2 | Type system | Medium | `true`/`false`/`null` standalone types, DNF types |
 | 8.3 | Typed constants | Medium | Typed class constants, `json_validate()`, `#[Override]` |

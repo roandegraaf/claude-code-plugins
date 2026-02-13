@@ -48,7 +48,7 @@ This reveals conflicts before making changes.
 
 ## Acorn 2.x to 4.x Migration Highlights
 
-Acorn 4.x is a significant rewrite. Sites running Acorn 2.x (common in older Sage 10 setups) require careful migration.
+Acorn 4.x is a significant rewrite built on Laravel v10 components. **Acorn v4 requires PHP >= 8.1.** Sites running Acorn 2.x (common in older Sage 10 setups) require careful migration. Upgrade with: `composer require roots/acorn ^4.0 -W` (the `-W` flag ensures bundled Laravel dependencies are also upgraded).
 
 ### Namespace Changes
 
@@ -60,14 +60,16 @@ Acorn 4.x moves to `Roots\Acorn` as the primary namespace. Check all `use` state
 
 ### Service Provider Patterns
 
-- Service providers must extend `Illuminate\Support\ServiceProvider` (or `Roots\Acorn\ServiceProvider`)
+- Service providers should extend `Illuminate\Support\ServiceProvider` (changed from `Roots\Acorn\ServiceProvider`)
+- `ThemeServiceProvider` should extend `Roots\Acorn\Sage\SageServiceProvider` and call `parent::register()` and `parent::boot()` — failure to do so causes "Target class [sage.view] does not exist" errors
 - The `boot()` and `register()` method signatures must match the parent
 - Deferred providers use a different registration mechanism
 
 ### Config File Changes
 
 - Config files move to `config/` in the theme root
-- `app.php` config structure changed (providers list, aliases)
+- `config/app.php` providers list changed: use `ServiceProvider::defaultProviders()->merge([...])` pattern
+- Timezone retrieval changed: `get_option('timezone_string') ?: 'UTC'`
 - Cache and view paths may need reconfiguration
 
 ### Boot Process Changes

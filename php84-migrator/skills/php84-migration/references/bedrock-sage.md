@@ -410,8 +410,9 @@ The `itinerisltd/acf-gutenblocks` package v0.4.x may use deprecated PHP features
 
 WordPress 5.x core is NOT compatible with PHP 8.4. Key issues:
 - Dynamic properties throughout `WP_Query`, `WP_Post`, `WP_User`
-- Deprecated `utf8_encode()`/`utf8_decode()` usage (removed in 8.4-dev)
-- Implicit nullable parameters in core functions
+- `utf8_encode()`/`utf8_decode()` usage (deprecated 8.2, will be removed in future PHP — use `mb_convert_encoding()` instead)
+- Null to non-nullable internal function parameters (deprecated 8.1)
+- Current Bedrock requires PHP >= 8.1; current WordPress recommends PHP 8.1+
 
 **Fix:** Upgrade to WordPress 6.4+ (via `roots/wordpress` in `composer.json`):
 ```json
