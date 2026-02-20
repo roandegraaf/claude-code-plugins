@@ -1,6 +1,6 @@
 # Dependency Compatibility Matrix
 
-Reference for upgrading Composer dependencies in WordPress Bedrock/Sage sites from PHP 7.4 to 8.4.
+Reference for upgrading dependencies in WordPress sites (Bedrock/Sage and classic themes) from PHP 7.4 to 8.4.
 
 ## Compatibility Matrix
 
@@ -197,3 +197,39 @@ composer why-not <package> <version>
 6. Update third-party plugins and libraries
 7. Run `composer update` and resolve remaining conflicts
 8. Run the full test suite under PHP 8.4
+
+## Sites Without Composer
+
+Classic WordPress themes may not use Composer at all. When `HAS_COMPOSER=false`:
+
+### Skip All Composer Steps
+
+- Do not attempt `composer update`, `composer install`, or `composer show`
+- Do not modify any `composer.json` or `composer.lock` files
+- Skip the dependency upgrade task entirely in the migration plan
+
+### Manual Plugin Compatibility Verification
+
+Without Composer, plugin versions must be verified manually:
+
+1. **Identify active plugins** — check `wp-content/plugins/` or the WordPress admin
+2. **Check PHP 8.4 compatibility** for each plugin:
+   - WordPress.org plugin page → "Requires PHP" and "Tested up to" fields
+   - Plugin changelog for PHP 8.x compatibility notes
+   - GitHub/source repository for `composer.json` PHP requirement
+3. **Priority plugins to verify:**
+   - **ACF Pro** — version 6.0+ supports PHP 8.x; versions below 5.12 may have issues
+   - **WooCommerce** — version 8.0+ for PHP 8.2+ support
+   - **Gravity Forms** — version 2.7+ for PHP 8.x
+   - **WPML** — check current version against their compatibility page
+4. **Flag risks:**
+   - Plugins not updated in 12+ months
+   - Plugins with no stated PHP 8.x support
+   - Custom/private plugins (need source code review)
+
+### WordPress Core Compatibility
+
+- WordPress 6.2+ has full PHP 8.2 compatibility
+- WordPress 6.4+ recommended for PHP 8.4
+- Check `wp-includes/version.php` or admin dashboard for current version
+- If WordPress is below 6.2, flag as a prerequisite upgrade before PHP migration

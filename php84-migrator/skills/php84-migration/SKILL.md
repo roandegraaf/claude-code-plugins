@@ -1,9 +1,9 @@
 ---
 name: php84-migration
 description: >
-  PHP 7.4 to 8.4 migration knowledge for WordPress Bedrock/Sage/ACF sites.
+  PHP 7.4 to 8.4 migration knowledge for WordPress sites (Bedrock/Sage and classic themes with ACF).
   Triggers on: PHP migration, PHP upgrade, PHP 8 compatibility, null safety,
-  deprecated functions, dynamic properties, Bedrock upgrade, Sage upgrade.
+  deprecated functions, dynamic properties, Bedrock upgrade, Sage upgrade, classic theme upgrade.
 ---
 
 # PHP 7.4 to 8.4 Migration
@@ -109,6 +109,16 @@ strtolower(get_field('name') ?? '')
 - **Sage**: Blade templates, `app/` controllers/composers, service providers, Bud build pipeline
 
 See [references/bedrock-sage.md](references/bedrock-sage.md) for Bedrock/Sage migration checklist.
+
+## Classic WordPress Theme Specifics
+
+- **Structure**: Root-level template files (header.php, single.php, etc.), `includes/` for CPTs/helpers, `flexible-content/` for ACF template parts
+- **ACF data flow**: `get_field()` accessed directly in templates — fix at point of use (no `with()` boundary)
+- **the_field() safety**: `the_field()` and `the_sub_field()` echo directly and are safe from null-to-non-nullable deprecations; `get_field()` and `get_sub_field()` return values need null coalescing when passed to functions
+- **No Composer**: Many classic themes have no `composer.json` — skip dependency upgrade steps, verify plugin compatibility manually
+- **Build tools**: Gulp (most common), npm scripts, or none — PHP changes don't affect the build but verify assets still compile
+
+See [references/classic-theme.md](references/classic-theme.md) for classic theme migration patterns.
 
 ## Dependency Compatibility
 

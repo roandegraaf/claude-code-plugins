@@ -1,6 +1,6 @@
 # ACF Migration Patterns for PHP 8.x
 
-Reference for fixing Advanced Custom Fields usage when migrating PHP 7.4 to 8.4 on WordPress Bedrock/Sage sites.
+Reference for fixing Advanced Custom Fields usage when migrating PHP 7.4 to 8.4 on WordPress sites (Bedrock/Sage and classic themes).
 
 ## 1. Field Type Safe Default Mapping
 
@@ -398,7 +398,115 @@ public function teamMembers()
 }
 ```
 
-## 5. ACF Gutenblocks Specific
+## 5. Classic Theme Direct Template Pattern
+
+In classic (non-Sage) themes, ACF fields are accessed directly in template files. There is no `with()` boundary to fix at — apply null coalescing at point of use in each template file.
+
+### Flexible Content Template Parts
+
+Classic themes commonly use `flexible-content/` directories with ACF flexible content layouts. Each layout file is included via `get_template_part()` or a custom loader:
+
+```php
+// flexible-content/hero.php — BEFORE
+$title = get_field('title');
+$subtitle = get_field('subtitle');
+$bg_image = get_field('background_image');
+$cta = get_field('cta_link');
+$features = get_field('features');
+?>
+<section class="hero">
+    <h1><?php echo strtolower($title); ?></h1>
+    <p><?php echo $subtitle; ?></p>
+    <?php echo wp_get_attachment_image($bg_image, 'full'); ?>
+    <a href="<?php echo $cta['url']; ?>"><?php echo $cta['title']; ?></a>
+    <?php foreach ($features as $feature) : ?>
+        <div><?php echo $feature['label']; ?></div>
+    <?php endforeach; ?>
+</section>
+
+// flexible-content/hero.php — AFTER
+$title = get_field('title') ?? '';
+$subtitle = get_field('subtitle') ?? '';
+$bg_image = get_field('background_image');
+$cta = get_field('cta_link');
+$features = get_field('features') ?: [];
+?>
+<section class="hero">
+    <h1><?php echo strtolower($title); ?></h1>
+    <p><?php echo $subtitle; ?></p>
+    <?php if ($bg_image) : ?>
+        <?php echo wp_get_attachment_image($bg_image, 'full'); ?>
+    <?php endif; ?>
+    <?php if ($cta) : ?>
+        <a href="<?php echo $cta['url']; ?>"><?php echo $cta['title'] ?? ''; ?></a>
+    <?php endif; ?>
+    <?php foreach ($features as $feature) : ?>
+        <div><?php echo $feature['label'] ?? ''; ?></div>
+    <?php endforeach; ?>
+</section>
+```
+
+### Sub-field Access in have_rows() Loops
+
+Classic themes often use `have_rows()` with `the_sub_field()` and `get_sub_field()`:
+
+```php
+// BEFORE
+if (have_rows('slides')) :
+    while (have_rows('slides')) : the_row();
+        $image = get_sub_field('image');
+        $caption = get_sub_field('caption');
+        ?>
+        <div class="slide">
+            <?php echo wp_get_attachment_image($image, 'large'); ?>
+            <p><?php echo strtolower($caption); ?></p>
+        </div>
+    <?php endwhile;
+endif;
+
+// AFTER
+if (have_rows('slides')) :
+    while (have_rows('slides')) : the_row();
+        $image = get_sub_field('image');
+        $caption = get_sub_field('caption') ?? '';
+        ?>
+        <div class="slide">
+            <?php if ($image) : ?>
+                <?php echo wp_get_attachment_image($image, 'large'); ?>
+            <?php endif; ?>
+            <p><?php echo strtolower($caption); ?></p>
+        </div>
+    <?php endwhile;
+endif;
+```
+
+### functions.php Pattern
+
+Classic theme `functions.php` files often retrieve options and pass them to filters/actions:
+
+```php
+// BEFORE
+$logo_id = get_field('site_logo', 'option');
+$phone = get_field('phone_number', 'option');
+$address = get_field('address', 'option');
+add_filter('body_class', function($classes) {
+    $layout = get_field('layout', 'option');
+    $classes[] = 'layout-' . strtolower($layout);  // TypeError if null
+    return $classes;
+});
+
+// AFTER
+$logo_id = get_field('site_logo', 'option');  // guard before use
+$phone = get_field('phone_number', 'option') ?? '';
+$address = get_field('address', 'option') ?? '';
+add_filter('body_class', function($classes) {
+    $layout = get_field('layout', 'option') ?? '';
+    $classes[] = 'layout-' . strtolower($layout);
+    return $classes;
+});
+```
+
+## 6. ACF Gutenblocks Specific
 
 ### AbstractBladeBlock null handling in constructor
 
