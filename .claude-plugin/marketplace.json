@@ -95,7 +95,7 @@
             "name": "bedrock-sage-migrator",
             "description": "Autonomously migrate Bedrock/Sage/ACF WordPress sites from PHP 7.4 to 8.4 with team-based agent delegation",
             "version": "1.0.1",
-            "source": "./bedrock-migrate",
+            "source": "./bedrock-sage-migrator",
             "category": "development",
             "strict": false
         },
