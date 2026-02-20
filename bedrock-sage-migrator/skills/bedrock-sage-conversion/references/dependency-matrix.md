@@ -7,7 +7,8 @@ Reference for upgrading dependencies in WordPress sites (Bedrock/Sage and classi
 | Package | Typical Old Version | Min for PHP 8.4 | Recommended | Notes |
 |---------|-------------------|-----------------|-------------|-------|
 | `roots/wordpress` | 5.9 | 6.4 | 6.7+ | Check available wpackagist versions |
-| `roots/acorn` | 2.0.0-alpha | 4.0+ | Latest 4.x | Major breaking changes from 2.x to 4.x |
+| `roots/acorn` | 2.0.0-alpha | 4.0+ | Latest 5.x | Acorn 5 built on Laravel 12.x, requires PHP >=8.2 |
+| `roots/sage` | 10.x | 10.x | 11.x | Sage 11 requires Acorn 5 |
 | `roots/bedrock-autoloader` | 1.0 | 1.0 | Latest | Generally compatible |
 | `roots/wp-config` | 1.0.0 | 1.0.0 | Latest | Generally compatible |
 | `roots/wp-password-bcrypt` | 1.0.0 | 1.0.0 | Latest | Generally compatible |
@@ -17,6 +18,13 @@ Reference for upgrading dependencies in WordPress sites (Bedrock/Sage and classi
 | `wpackagist-plugin/wordpress-seo` | dev-trunk | Latest | Latest | Yoast regularly updates |
 | `wpackagist-plugin/amazon-s3-and-cloudfront` | 2.5.5 | Latest | Latest | Check PHP 8.4 support |
 | `league/csv` | ^9.6 | ^9.6 | ^9.x | Already compatible |
+
+## npm Dependencies (Sage 11)
+
+| Package | Notes |
+|---------|-------|
+| `laravel-vite-plugin` | Vite integration for Laravel/Acorn; replaces Bud in Sage 11 setups |
+| `@roots/vite-plugin` | Roots-specific Vite plugin for Sage 11 asset bundling |
 
 ## How to Check Package PHP Requirements
 
@@ -83,6 +91,61 @@ Acorn 4.x moves to `Roots\Acorn` as the primary namespace. Check all `use` state
 - Acorn 4.x integrates differently with Bud/Mix
 - `asset()` helper behavior may differ
 - Manifest file location and format may change
+
+## Acorn 4.x to 5.x Migration Highlights
+
+Acorn 5.x is built on Laravel 12.x (up from 10.x). **Acorn v5 requires PHP >= 8.2.** Sage 11 ships with Acorn 5.
+
+### Bootstrap Changes
+
+The application bootstrap pattern changed significantly:
+
+```php
+// Acorn 4.x — bootloader() call in functions.php
+\Roots\bootloader();
+
+// Acorn 5.x — fluent configure chain
+Application::configure()
+    ->withProviders([
+        App\Providers\ThemeServiceProvider::class,
+    ])
+    ->withRouting(wordpress: true)
+    ->boot();
+```
+
+### Provider Registration
+
+Providers are now registered in the `withProviders()` chain, not in `composer.json` extra or `config/app.php`:
+
+```php
+// Acorn 4.x — registered in config/app.php or composer.json extra
+'providers' => ServiceProvider::defaultProviders()->merge([
+    App\Providers\ThemeServiceProvider::class,
+])->toArray(),
+
+// Acorn 5.x — registered in the configure chain
+Application::configure()
+    ->withProviders([
+        App\Providers\ThemeServiceProvider::class,
+    ])
+    ->boot();
+```
+
+### Laravel Version Bump
+
+- Acorn 5 is built on Laravel 12.x (Acorn 4 used Laravel 10.x)
+- Review any Laravel-specific APIs used directly in theme code for 10.x → 12.x changes
+- Laravel 12.x drops support for some older patterns; check the Laravel upgrade guide
+
+### Routing
+
+WordPress routing is now declared in the configure chain:
+
+```php
+Application::configure()
+    ->withRouting(wordpress: true)
+    ->boot();
+```
 
 ## Warning: dev-trunk Pinning
 

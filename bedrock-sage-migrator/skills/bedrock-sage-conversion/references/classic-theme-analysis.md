@@ -1,3 +1,74 @@
+# Classic Theme Analysis Reference
+
+Reference for analyzing classic WordPress themes for conversion to Bedrock/Sage 11.
+
+## Full Structure Inventory
+
+When analyzing a classic theme for conversion, build a complete inventory:
+
+### Theme Identity
+- Read `style.css` for Theme Name, Version, Author, Description, Text Domain
+- Check for child theme: `Template:` header in style.css
+
+### Template Files
+- Root templates: header.php, footer.php, sidebar.php, index.php, home.php, front-page.php, single.php, archive.php, page.php, 404.php, search.php
+- CPT templates: single-{cpt}.php, archive-{cpt}.php
+- Taxonomy templates: taxonomy-{tax}.php
+- Page templates: templates/*.php or page-*.php (check for `Template Name:` comment)
+- Category/tag: category.php, tag.php, category-{slug}.php
+
+### Includes Directory
+- Custom post types (look for register_post_type)
+- Custom taxonomies (look for register_taxonomy)
+- AJAX handlers (look for wp_ajax_ hooks)
+- Helper/utility functions
+- Widget classes
+- Shortcode definitions
+- Custom Walker classes
+
+### ACF Integration
+- acf-json/ directory with field group exports
+- flexible-content/ directory (ACF flexible content layouts)
+- flexible-post-content/ directory (ACF flex content for CPTs)
+- Options pages (look for acf_add_options_page)
+- ACF blocks (look for acf_register_block_type)
+
+### functions.php Analysis
+- Theme setup (add_theme_support calls)
+- Menu registration (register_nav_menus)
+- Widget areas (register_sidebar)
+- Script/style enqueues (wp_enqueue_script, wp_enqueue_style)
+- Custom image sizes (add_image_size)
+- ACF options pages
+- Custom post type includes
+- AJAX handler includes
+- Filter hooks
+- Action hooks
+- Helper function includes
+
+### Assets Inventory
+- Build tool: gulpfile.js (Gulp), webpack.config.js (Webpack), or package.json scripts
+- SCSS files: assets/scss/ or src/scss/ — find entry point (usually app.scss or style.scss)
+- JS files: assets/js/ or src/js/ — find entry point
+- Images: assets/images/ or images/
+- SVG sprites: look for sprite.svg or icons.svg
+- Fonts: assets/fonts/ or fonts/
+- Libraries: vendor CSS/JS (Bootstrap, jQuery plugins, etc.)
+
+### Build Configuration
+- package.json: dependencies, devDependencies, scripts
+- gulpfile.js: tasks, source/dest paths, plugins used
+- .babelrc or babel config: JS transpilation settings
+- .browserslistrc: browser support targets
+
+### WordPress Features Used
+- Customizer settings (look for customize_register)
+- Custom Gutenberg blocks
+- REST API endpoints (look for register_rest_route)
+- WP-CLI commands
+- Multisite compatibility
+- Translation files (.pot/.po/.mo in languages/)
+
 # Classic WordPress Theme Migration Patterns
 
 Reference for migrating classic (non-Bedrock) WordPress themes from PHP 7.4 to 8.4.

@@ -1,0 +1,25 @@
+{
+  "name": "bedrock-sage-migrator",
+  "version": "1.0.0",
+  "description": "Convert classic WordPress themes to Bedrock/Sage 11 with PHP 8.4 migration — supports ACF, custom post types, Gulp/SCSS themes",
+  "author": {
+    "name": "Roan de Graaf",
+    "email": "info@roandegraaf.nl"
+  },
+  "homepage": "https://github.com/roandegraaf/claude-code-plugins",
+  "repository": "https://github.com/roandegraaf/claude-code-plugins",
+  "keywords": [
+    "wordpress",
+    "bedrock",
+    "sage",
+    "sage11",
+    "acorn",
+    "vite",
+    "migration",
+    "classic-theme",
+    "php84",
+    "acf",
+    "blade"
+  ],
+  "license": "MIT"
+}
