@@ -1,6 +1,6 @@
 {
   "name": "bootstrap-to-tailwind",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Autonomously migrate WordPress themes from Bootstrap 4 CSS to Tailwind CSS v4 with team-based agent delegation",
   "author": {
     "name": "Roan de Graaf",

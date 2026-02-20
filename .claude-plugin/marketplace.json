@@ -92,17 +92,17 @@
             "strict": false
         },
         {
-            "name": "php84-migrator",
+            "name": "bedrock-sage-migrator",
             "description": "Autonomously migrate Bedrock/Sage/ACF WordPress sites from PHP 7.4 to 8.4 with team-based agent delegation",
-            "version": "1.1.0",
-            "source": "./php84-migrator",
+            "version": "1.0.1",
+            "source": "./bedrock-migrate",
             "category": "development",
             "strict": false
         },
         {
             "name": "bootstrap-to-tailwind",
             "description": "Autonomously migrate WordPress themes from Bootstrap 4 CSS to Tailwind CSS v4 with team-based agent delegation",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": "./bootstrap-to-tailwind",
             "category": "development",
             "strict": false
