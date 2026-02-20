@@ -157,6 +157,55 @@ Run `/work ENG-123` to start working on an issue. When ready, `/ship` to create 
 
 ---
 
+### :rocket: PHP 8.4 Migrator
+
+Autonomously migrate Bedrock/Sage/ACF WordPress sites from PHP 7.4 to PHP 8.4 with team-based agent delegation.
+
+**Install:**
+```bash
+/plugin install php84-migrator@roans-cc-plugins
+```
+
+**Features:**
+- **4-Phase Migration**: Automated scan → plan → fix → verify pipeline
+- **Breaking Change Detection**: Finds null safety issues, dynamic properties, implicit nullable params, deprecated functions across PHP 8.0–8.4
+- **ACF-Aware**: Type-aware null coalescing based on ACF field types (text → `?? ''`, repeater → `?: []`, etc.)
+- **Bedrock/Sage Support**: Handles Composer dependencies, Blade templates, service providers, and Bud build pipeline
+- **Dependency Matrix**: Automatically upgrades Composer packages to PHP 8.4-compatible versions
+- **Team-Based**: Orchestrator delegates to parallel scanner, planner, fixer, and verifier subagents
+
+**Usage:**
+```
+/php84-migrate /path/to/bedrock-site
+```
+
+---
+
+### :art: Bootstrap to Tailwind Migrator
+
+Autonomously migrate WordPress themes from Bootstrap 4 CSS to Tailwind CSS v4 with team-based agent delegation.
+
+**Install:**
+```bash
+/plugin install bootstrap-to-tailwind@roans-cc-plugins
+```
+
+**Features:**
+- **4-Phase Migration**: Automated scan → plan → fix → verify pipeline
+- **Grid Migration**: Bootstrap flexbox grid (`row`/`col-md-6`) → Tailwind CSS Grid (`grid grid-cols-12`/`col-span-6`)
+- **Utility Class Mapping**: Exhaustive Bootstrap 4 → Tailwind v4 class mapping (display, flex, text, spacing, sizing)
+- **SCSS Conversion**: Bootstrap variables/mixins → CSS custom properties and `@theme` configuration
+- **Build Pipeline**: Gulp + node-sass → Tailwind CLI (keeps same output path, no WordPress enqueue changes)
+- **JS Component Detection**: Identifies Bootstrap JS usage (modals, dropdowns, collapse) and suggests CSS-only/Alpine.js replacements
+- **Team-Based**: Orchestrator delegates to parallel scanner, planner, fixer, and verifier subagents
+
+**Usage:**
+```
+/tailwind-migrate /path/to/wordpress-theme
+```
+
+---
+
 ## Usage
 
 ### Agents (python-simplifier, flutter-simplifier, swift-simplifier, php-wordpress-simplifier, laravel-simplifier)
@@ -178,6 +227,10 @@ Skills provide specialized knowledge and workflows. Claude automatically uses in
 ### Workflow Plugins (linear-workflow)
 
 Workflow plugins provide slash commands that automate multi-step development processes. Run `/work`, `/ship`, `/merge`, `/my-issues`, and `/issue-status` to drive the full Linear + Git/GitHub cycle without leaving Claude Code.
+
+### Migration Plugins (php84-migrator, bootstrap-to-tailwind)
+
+Migration plugins provide autonomous, multi-phase migration pipelines. Run `/php84-migrate` or `/tailwind-migrate` with a path to your site/theme, and the orchestrator handles scanning, planning, fixing, and verification using parallel subagents.
 
 ## Repository Structure
 
@@ -216,6 +269,33 @@ claude-code-plugins/
 │           └── references/
 │               ├── branch-naming.md
 │               └── pr-templates.md
+├── php84-migrator/
+│   ├── agents/
+│   │   └── php84-migrator.md     # 4-phase orchestrator
+│   ├── commands/
+│   │   └── php84-migrate.md      # /php84-migrate [path]
+│   └── skills/
+│       └── php84-migration/
+│           ├── SKILL.md
+│           └── references/
+│               ├── breaking-changes.md
+│               ├── acf-patterns.md
+│               ├── bedrock-sage.md
+│               └── dependency-matrix.md
+├── bootstrap-to-tailwind/
+│   ├── agents/
+│   │   └── tailwind-migrator.md  # 4-phase orchestrator
+│   ├── commands/
+│   │   └── tailwind-migrate.md   # /tailwind-migrate [path]
+│   └── skills/
+│       └── tailwind-migration/
+│           ├── SKILL.md
+│           └── references/
+│               ├── class-mapping.md
+│               ├── grid-migration.md
+│               ├── scss-migration.md
+│               ├── js-components.md
+│               └── build-pipeline.md
 ├── README.md
 └── LICENSE
 ```
