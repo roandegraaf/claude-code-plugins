@@ -1,0 +1,20 @@
+{
+  "name": "php84-migrator",
+  "version": "1.0.0",
+  "description": "Autonomously migrate Bedrock/Sage/ACF WordPress sites from PHP 7.4 to 8.4 with team-based agent delegation",
+  "author": {
+    "name": "Roan de Graaf",
+    "email": "info@roandegraaf.nl"
+  },
+  "homepage": "https://github.com/roandegraaf/claude-code-plugins",
+  "keywords": [
+    "php",
+    "php84",
+    "migration",
+    "wordpress",
+    "bedrock",
+    "sage",
+    "acf"
+  ],
+  "license": "MIT"
+}
