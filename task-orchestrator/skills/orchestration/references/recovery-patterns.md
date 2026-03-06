@@ -165,7 +165,7 @@ eslint <files>      # Non-zero exit
 ### 5. Timeout
 
 **Detection:**
-Task tool doesn't return within timeout period.
+Agent tool doesn't return within timeout period.
 
 **Recovery:**
 ```
@@ -342,6 +342,6 @@ When to stop retrying and escalate to human:
 3. Abort: /orchestrate --abort
 
 ### Context Files
-- State: .claude/orchestrator-state.json
-- Logs: .claude/orchestrator-logs/<timestamp>.log
+- Progress: Use TaskList to check task status
+- Logs: Check git log for changes made by subagents
 ```

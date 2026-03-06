@@ -18,9 +18,9 @@ Detailed patterns for coordinating agent teams on complex multi-area tasks.
 
 ```
 Team Lead (orchestrator)
-├── frontend-dev    → owns src/components/, src/pages/, src/styles/
-├── backend-dev     → owns src/api/, src/services/, src/models/
-└── test-writer     → owns tests/ (spawned after implementation)
+├── frontend-dev    -> owns src/components/, src/pages/, src/styles/
+├── backend-dev     -> owns src/api/, src/services/, src/models/
+└── test-writer     -> owns tests/ (spawned after implementation)
 ```
 
 Typical size: 2-3 teammates.
@@ -31,10 +31,10 @@ Typical size: 2-3 teammates.
 
 ```
 Team Lead (orchestrator)
-├── module-a-dev    → owns src/module-a/
-├── module-b-dev    → owns src/module-b/
-├── module-c-dev    → owns src/module-c/
-└── integrator      → owns src/shared/, wires modules together (spawned after modules complete)
+├── module-a-dev    -> owns src/module-a/
+├── module-b-dev    -> owns src/module-b/
+├── module-c-dev    -> owns src/module-c/
+└── integrator      -> owns src/shared/, wires modules together (spawned after modules complete)
 ```
 
 Typical size: 3-5 teammates.
@@ -45,9 +45,9 @@ Typical size: 3-5 teammates.
 
 ```
 Team Lead (orchestrator)
-├── data-layer-dev      → owns src/db/, src/repositories/
-├── business-logic-dev  → owns src/services/, src/domain/
-└── presentation-dev    → owns src/controllers/, src/views/
+├── data-layer-dev      -> owns src/db/, src/repositories/
+├── business-logic-dev  -> owns src/services/, src/domain/
+└── presentation-dev    -> owns src/controllers/, src/views/
 ```
 
 Typical size: 2-3 teammates.
@@ -58,9 +58,9 @@ Typical size: 2-3 teammates.
 
 ```
 Team Lead (orchestrator)
-├── api-dev         → owns API routes and middleware
-├── auth-dev        → owns authentication and authorization
-└── infra-dev       → owns configuration, deployment, CI/CD
+├── api-dev         -> owns API routes and middleware
+├── auth-dev        -> owns authentication and authorization
+└── infra-dev       -> owns configuration, deployment, CI/CD
 ```
 
 Typical size: 2-4 teammates.
@@ -76,7 +76,7 @@ Assign all tasks upfront based on file ownership.
 2. Map each item to a file/directory owner
 3. Create all tasks via TaskCreate
 4. Assign owners via TaskUpdate
-5. Spawn teammates — they find their tasks immediately
+5. Spawn teammates -- they find their tasks immediately
 ```
 
 **Pros**: Clear ownership, no coordination overhead during execution.
@@ -101,12 +101,12 @@ Create tasks without owners, let teammates claim available work.
 Distribute tasks in phases, with verification between phases.
 
 ```
-Phase 1: Foundation tasks → assign to specialists
-  ↓ verify
-Phase 2: Feature tasks → assign based on Phase 1 results
-  ↓ verify
-Phase 3: Integration tasks → assign to integrator
-  ↓ verify
+Phase 1: Foundation tasks -> assign to specialists
+  | verify
+Phase 2: Feature tasks -> assign based on Phase 1 results
+  | verify
+Phase 3: Integration tasks -> assign to integrator
+  | verify
 ```
 
 **Pros**: Each phase validates before the next begins.
@@ -129,7 +129,7 @@ Example contract in task description:
 ```
 ## Interface Contract
 Your API endpoint must:
-- POST /api/items → accepts { name: string, quantity: number }
+- POST /api/items -> accepts { name: string, quantity: number }
 - Returns { id: string, created_at: string }
 - Status 201 on success, 400 on validation error
 ```
@@ -139,21 +139,21 @@ Your API endpoint must:
 Teammates send messages when they need information.
 
 ```
-Teammate A → SendMessage to Teammate B:
+Teammate A -> SendMessage to Teammate B:
   "What format does your UserService.getUser() return?"
 
-Teammate B → SendMessage to Teammate A:
-  "Returns { id, name, email, role } — see src/services/user.ts:15"
+Teammate B -> SendMessage to Teammate A:
+  "Returns { id, name, email, role } -- see src/services/user.ts:15"
 ```
 
-Use sparingly — each message costs tokens and context.
+Use sparingly -- each message costs tokens and context.
 
 ### Broadcast
 
 Lead sends information to all teammates at once.
 
 ```
-Lead → SendMessage broadcast:
+Lead -> SendMessage broadcast:
   "Shared types updated in src/types/index.ts. Pull latest before continuing."
 ```
 
@@ -222,8 +222,8 @@ All teammates complete independently, then lead integrates.
 Integrate as each teammate completes.
 
 ```
-1. Teammate A completes → lead integrates A's work
-2. Teammate B completes → lead integrates B's work (with A already integrated)
+1. Teammate A completes -> lead integrates A's work
+2. Teammate B completes -> lead integrates B's work (with A already integrated)
 3. Run tests after each integration step
 ```
 
@@ -285,8 +285,7 @@ If multiple teammates fail or the task proves too complex for team mode:
 
 ```
 1. Shut down all teammates gracefully
-2. Teammate cleanup
+2. TeamDelete
 3. Fall back to subagent mode
 4. Re-execute using standard orchestration
-5. Document the failure for future reference
 ```

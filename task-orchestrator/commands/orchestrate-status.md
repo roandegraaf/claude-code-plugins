@@ -1,30 +1,27 @@
 ---
 name: orchestrate-status
 description: Check the status of an ongoing or completed orchestration
-argument-hint: [--verbose] [--task-id <id>]
+argument-hint: [--verbose]
 allowed-tools: Read, Glob, Bash, TaskList
 ---
 
 # Orchestration Status
 
-Check the status of orchestration tasks.
+Check the status of orchestration tasks using the shared task list.
 
 ## Arguments
 
 Parse from: `$ARGUMENTS`
 
-- **--verbose**: Show detailed chunk information
-- **--task-id**: Check specific task (default: most recent)
+- **--verbose**: Show detailed task information
 
 ## Status Check
 
-### 1. Find State File
+### 1. Read Task List
 
-```
-Read: .claude/orchestrator-state.json
-```
+Use `TaskList` to get all orchestration tasks and their status.
 
-If no state file exists:
+If no tasks found:
 ```
 No active orchestration found.
 
@@ -34,39 +31,27 @@ To start a new orchestration:
 - /orchestrate-implement <plan-file>
 ```
 
-### 2. Parse and Display Status
+### 2. Display Status
 
 ## Standard Output
 
 ```
 ## Orchestration Status
 
-**Task ID**: <id>
 **Type**: <simplify|implement|custom>
-**Status**: <planning|executing|verifying|complete|failed>
-**Started**: <timestamp>
+**Status**: <executing|verifying|complete|failed>
 
 ### Progress
-█████████░░░░░░░░░░░ 45% (9/20 chunks)
-
-- Completed: 9
-- In Progress: 2
-- Failed: 1
-- Pending: 8
+- Completed: <N>
+- In Progress: <N>
+- Failed: <N>
+- Pending: <N>
 
 ### Current Activity
-- chunk-10: Simplifying src/services/ (in progress)
-- chunk-11: Simplifying src/api/ (in progress)
+<list of in-progress tasks>
 
 ### Recent Failures
-- chunk-7: src/utils/helpers.py
-  Error: Test failure - test_helper_function
-  Attempts: 2/3
-  Status: Retrying
-
-### Verification
-- Test Command: pytest
-- Last Run: ✓ Passing (45 tests)
+<list of failed tasks with error details>
 ```
 
 ## Verbose Output (--verbose)
@@ -74,140 +59,44 @@ To start a new orchestration:
 ```
 ## Orchestration Status (Verbose)
 
-**Task ID**: <id>
-**Type**: <type>
-**Description**: <original task>
-**Status**: <status>
-**Started**: <timestamp>
+### All Tasks
 
-### Configuration
-- Max Parallel: 20
-- Max Files/Chunk: 20
-- Auto Rollback: Yes
+| ID | Status | Description | Owner |
+|----|--------|-------------|-------|
+| 1 | complete | <description> | - |
+| 2 | in_progress | <description> | - |
+| 3 | pending | <description> | - |
 
-### All Chunks
-
-| ID | Status | Files | Directory | Attempts | Error |
-|----|--------|-------|-----------|----------|-------|
-| chunk-1 | ✓ complete | 15 | src/models/ | 1 | - |
-| chunk-2 | ✓ complete | 18 | src/views/ | 1 | - |
-| chunk-3 | ✓ complete | 12 | src/utils/ | 2 | Retry successful |
-| chunk-4 | ⚠ failed | 20 | src/core/ | 3 | Max retries exceeded |
-| chunk-5 | ◐ in_progress | 14 | src/api/ | 1 | - |
-| chunk-6 | ○ pending | 16 | src/services/ | 0 | - |
-| chunk-7 | ⊘ blocked | 10 | src/integrations/ | 0 | Blocked by chunk-4 |
-
-### Dependency Graph
-chunk-1 ─┬─> chunk-5 ──> chunk-7
-chunk-2 ─┤
-chunk-3 ─┘
-chunk-4 ────────────────> chunk-7 (blocked)
-
-### Stash Status
-- orchestrator-chunk-5: Active (src/api/*)
-- orchestrator-chunk-6: Active (src/services/*)
-
-### Test History
-| Time | Result | Duration | Failures |
-|------|--------|----------|----------|
-| 14:32 | ✓ Pass | 12.3s | 0 |
-| 14:28 | ✗ Fail | 11.8s | 2 |
-| 14:25 | ✓ Pass | 12.1s | 0 |
-
-### Verification Status
-- Tests: ✓ Passing
-- Review: Pending
-- UI Check: N/A
+### Verification
+- Test Command: <detected>
+- Last Run: <pass/fail>
 ```
 
 ## Team Mode Status
 
-If `execution_strategy` is `"team"` in the state file, display additional team information:
+If tasks have owners assigned (indicating team mode):
 
 ```
 ### Agent Team Status
 
-**Team**: <team_name>
-**Strategy**: Agent Team mode
-
 #### Teammates
-| Name | Role | Status | Tasks Done | Tasks Left |
-|------|------|--------|------------|------------|
-| frontend-dev | Frontend development | active | 3 | 1 |
-| backend-dev | Backend development | active | 2 | 2 |
-| test-writer | Test writing | idle | 0 | 3 |
+| Name | Status | Tasks Done | Tasks Left |
+|------|--------|------------|------------|
+| frontend-dev | active | 3 | 1 |
+| backend-dev | active | 2 | 2 |
 
-#### Shared Task List
-- Total Tasks: 11
-- Completed: 5
-- In Progress: 3
-- Pending: 2
-- Blocked: 1
-
-#### Phase Progress
-Phase 1 (Foundation): ✓ Complete
-Phase 2 (Implementation): ◐ In Progress (60%)
-Phase 3 (Integration): ○ Pending
-```
-
-### Team-Specific Actions
-
-If team mode is active, suggest team-relevant actions:
-
-```
 Team mode active. Options:
 - Send message to teammate: Use SendMessage tool
-- Check teammate tasks: /orchestrate-status --verbose
-- If teammate stuck: Send message asking for status update
-- Shutdown team: SendMessage shutdown_request to each teammate, then Teammate cleanup
+- Shutdown team: SendMessage shutdown_request to each teammate, then TeamDelete
 ```
 
-## Actions
+## Suggested Actions
 
-Based on status, suggest next actions:
+Based on status:
 
-### If Executing
-```
-Orchestration in progress. Monitor with:
-  /orchestrate-status --verbose
-
-To pause (not implemented yet):
-  Ctrl+C to interrupt
-```
-
-### If Failed
-```
-Orchestration has failures.
-
-Failed chunks:
-- chunk-4: <error details>
-
-Options:
-1. Fix issues manually, then: /orchestrate --resume
-2. Skip failed chunks: /orchestrate --resume --skip-failed
-3. Abort and rollback: /orchestrate --abort
-```
-
-### If Complete
-```
-Orchestration complete!
-
-Summary:
-- Total chunks: 20
-- Succeeded: 19
-- Skipped: 1
-
-All changes verified. Consider:
-1. Review changes: git diff HEAD~1
-2. Commit: git commit -m "Orchestrated: <task>"
-3. Clean up state: rm .claude/orchestrator-state.json
-```
-
-### Remove state file
-
-```bash
-rm .claude/orchestrator-state.json
-```
+- **Executing**: "Orchestration in progress. Monitor with `/orchestrate-status --verbose`"
+- **Failed**: "Failed tasks found. Fix issues and re-run, or skip failed tasks."
+- **Complete**: "All tasks complete. Review changes with `git diff`."
 
 ---
 
