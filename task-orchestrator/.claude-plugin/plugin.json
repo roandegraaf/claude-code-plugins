@@ -1,6 +1,6 @@
 {
   "name": "task-orchestrator",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "description": "Orchestrate large, complex tasks with intelligent subagent delegation, agent team coordination, parallel processing, and automatic verification",
   "author": {
     "name": "Roan de Graaf",

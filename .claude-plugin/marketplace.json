@@ -6,13 +6,13 @@
     },
     "metadata": {
         "description": "Roan's Claude Code plugins - agents and skills for development",
-        "version": "1.1.0"
+        "version": "2.0.0"
     },
     "plugins": [
         {
             "name": "python-simplifier",
             "description": "Agent that simplifies and refines Python code for clarity, consistency, and maintainability while preserving functionality",
-            "version": "1.0.1",
+            "version": "1.1.0",
             "source": "./",
             "category": "productivity",
             "strict": false,
@@ -26,7 +26,7 @@
         {
             "name": "flutter-simplifier",
             "description": "Agent that simplifies and refines Flutter/Dart code for clarity, consistency, and maintainability while preserving functionality",
-            "version": "1.0.1",
+            "version": "1.1.0",
             "source": "./",
             "category": "productivity",
             "strict": false,
@@ -40,7 +40,7 @@
         {
             "name": "php-wordpress-simplifier",
             "description": "Agent that simplifies and refines PHP WordPress plugin code for clarity, consistency, security, and maintainability while preserving functionality",
-            "version": "1.0.1",
+            "version": "1.1.0",
             "source": "./",
             "category": "productivity",
             "strict": false,
@@ -54,7 +54,7 @@
         {
             "name": "swift-simplifier",
             "description": "Agent that simplifies and refines Swift 6 code for clarity, consistency, and concurrency safety while preserving functionality",
-            "version": "1.0.1",
+            "version": "1.1.0",
             "source": "./",
             "category": "productivity",
             "strict": false,
@@ -68,7 +68,7 @@
         {
             "name": "laravel-simplifier",
             "description": "Agent that simplifies and refines Laravel PHP code for clarity, consistency, and maintainability while preserving functionality. Version-aware for Laravel 8-11+",
-            "version": "1.0.1",
+            "version": "1.1.0",
             "source": "./",
             "category": "productivity",
             "strict": false,
@@ -82,7 +82,7 @@
         {
             "name": "sage-wordpress-builder",
             "description": "Build WordPress websites using Roots Sage 10/11 with ACF Pro blocks, Tailwind CSS v4, Laravel Blade templating, and Vite",
-            "version": "1.1.0",
+            "version": "2.0.0",
             "source": "./",
             "category": "development",
             "strict": false,
@@ -94,7 +94,7 @@
         {
             "name": "task-orchestrator",
             "description": "Orchestrate large, complex tasks with intelligent subagent delegation, agent team coordination, parallel processing, and automatic verification",
-            "version": "2.0.5",
+            "version": "2.1.0",
             "source": "./task-orchestrator",
             "category": "productivity",
             "strict": false
@@ -102,7 +102,7 @@
         {
             "name": "linear-workflow",
             "description": "Automate the Linear + Git/GitHub development workflow: pick up issues, create branches, ship PRs, merge and close the loop",
-            "version": "1.1.0",
+            "version": "1.2.0",
             "source": "./linear-workflow",
             "category": "productivity",
             "strict": false
@@ -110,7 +110,7 @@
         {
             "name": "bedrock-sage-migrator",
             "description": "Autonomously migrate Bedrock/Sage/ACF WordPress sites from PHP 7.4 to 8.4 with team-based agent delegation",
-            "version": "1.0.1",
+            "version": "1.1.0",
             "source": "./bedrock-sage-migrator",
             "category": "development",
             "strict": false
@@ -118,7 +118,7 @@
         {
             "name": "bootstrap-to-tailwind",
             "description": "Autonomously migrate WordPress themes from Bootstrap 4 CSS to Tailwind CSS v4 with team-based agent delegation",
-            "version": "1.0.1",
+            "version": "1.1.0",
             "source": "./bootstrap-to-tailwind",
             "category": "development",
             "strict": false
