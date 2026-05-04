@@ -82,7 +82,7 @@
         {
             "name": "sage-wordpress-builder",
             "description": "Build WordPress websites using Roots Sage 10/11 with ACF Pro blocks, Tailwind CSS v4, Laravel Blade templating, and Vite",
-            "version": "2.1.0",
+            "version": "2.2.0",
             "source": "./",
             "category": "development",
             "strict": false,

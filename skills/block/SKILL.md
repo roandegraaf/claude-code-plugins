@@ -24,6 +24,7 @@ Create a complete ACF block from a Figma design, add it to the correct page with
 5. **Always verify visually in the browser** — never claim done without screenshot comparison.
 6. **Iterate until perfect** — if the browser doesn't match Figma, fix and re-check.
 7. **Always place the block on a page when the WordPress MCP is available.** Ask the user which page if it isn't clear from the arguments or Figma context. Never guess silently.
+8. **Always read `BLOCK.md` first.** If it doesn't exist in the project, create it by analyzing existing blocks before scaffolding the new one. Update it whenever conventions change.
 
 ## Step 1: Parse Arguments
 
@@ -65,16 +66,59 @@ Document:
 - Any special behavior (background images, overlays, decorative elements, animations)
 - Image assets and their positioning
 
-## Step 3: Study Existing Codebase Patterns
+## Step 3: Establish / Read Project Block Conventions (`BLOCK.md`)
 
-Read these files to understand the project's conventions:
+Every project that uses `/block` keeps a `BLOCK.md` at the repo root (or theme root, next to `app/Blocks/`). It is the single source of truth for this project's block conventions. **You must read it before scaffolding, and update it when you discover new conventions.**
 
-1. **BaseBlock class**: Glob for `**/BaseBlock.php` — understand `getCommonFields()`, `extractLayoutFields()`, `extractReusableContentFields()`
-2. **2-3 existing blocks** similar to the one being created — read their PHP class, Blade template, and ACF JSON
-3. **Blade components**: Read `resources/views/components/section.blade.php` and relevant `content/*.blade.php` components
-4. **Existing ACF JSON**: Read 1-2 existing `acf-json/group_block_*.json` files to match the exact JSON structure
+### 3a. Locate `BLOCK.md`
 
-**Match the exact patterns and conventions of the existing codebase. Do not invent new patterns.**
+Glob for `BLOCK.md` starting from the theme root and walking up to the repo root. Pick the closest one to `app/Blocks/`.
+
+### 3b. If `BLOCK.md` exists → READ IT
+
+Read it in full before doing anything else in this step. Treat its conventions as authoritative for this project. Skip to Step 3d.
+
+### 3c. If `BLOCK.md` does NOT exist → CREATE IT
+
+Before creating the new block, you must first study the existing blocks and document the project's conventions. This is a one-time investment that makes every future `/block` run faster and more consistent.
+
+Study these files:
+
+1. **BaseBlock class**: Glob for `**/BaseBlock.php` — note `getCommonFields()`, `extractLayoutFields()`, `extractReusableContentFields()`, and any other shared helpers.
+2. **Every existing block** (or at least 4–6 representative ones if there are many): read the PHP class, Blade template, and ACF JSON for each.
+3. **Blade components**: Read `resources/views/components/section.blade.php` and all `resources/views/components/content/*.blade.php`.
+4. **All existing ACF field groups**: Read `acf-json/group_block_*.json` plus any shared groups like `group_layout` and `group_reusable_content`.
+5. **Tailwind config / theme tokens**: Read `tailwind.config.js` (or `app.css` for Tailwind v4 `@theme`) to capture color, spacing, and typography tokens used by blocks.
+
+Then write `BLOCK.md` at the project root (or theme root if that's where `app/Blocks/` lives). It must cover at minimum:
+
+- **File layout**: where PHP classes, Blade templates, and ACF JSON live; naming conventions (PascalCase class, kebab-case view, snake_case field keys, etc.).
+- **BaseBlock contract**: what `getCommonFields()` returns; how `with()` should be composed; any required `$supports` defaults.
+- **Reusable ACF field groups**: every shared group (e.g. `group_layout`, `group_reusable_content`) — its fields, intent, and how blocks clone it. Include the exact `clone` JSON snippet.
+- **Standard tabs / field ordering**: e.g. "Layout tab → block-specific tab → Inhoud tab" — whatever the repo actually does.
+- **Field rules**: image return format, button-group usage, required/placeholder rules, key prefix patterns (`field_block_{name}_...`).
+- **Blade conventions**: required wrapper component (`<x-section>` and its props), reveal/animation attributes (`data-reveal-group`), standard content sub-components (`<x-content.title>` etc.), how `$content_items` and `$background_color` are passed.
+- **Tailwind tokens**: brand colors, spacing scale, font families/sizes referenced by blocks.
+- **Display / language**: e.g. block `$name` is in Dutch; tab labels are in Dutch ("Inhoud", "Layout").
+- **Page placement conventions**: anything specific to how blocks are inserted via the WordPress MCP in this project (post types, parent restrictions, default media library tags, etc.).
+- **Anything else that repeats** across 2+ blocks. If you see a pattern, write it down.
+
+Be specific. Cite real field keys, real component names, real file paths from this codebase. Do not write generic Sage advice — that already lives in the `sage-wordpress-builder` skill.
+
+### 3d. Match conventions exactly
+
+When you build the new block in Step 4, follow `BLOCK.md` exactly. **Do not invent new patterns.** If the design genuinely requires a new pattern, see Step 3e.
+
+### 3e. Update `BLOCK.md` when conventions change
+
+If during this run you:
+
+- Introduce a new reusable field group, helper, or component
+- Adopt a new naming convention
+- Discover an existing convention that wasn't documented
+- Make a deliberate, project-wide change to how blocks are structured
+
+…then **update `BLOCK.md` in the same change**. The file must stay in sync with the codebase. A single-block exception is not a convention — only document things that should apply to future blocks too.
 
 ## Step 4: Create the Block Files
 
