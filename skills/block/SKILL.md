@@ -23,6 +23,7 @@ Create a complete ACF block from a Figma design, add it to the correct page with
 4. **Always use the project's `sage-wordpress-builder` skill references** for conventions.
 5. **Always verify visually in the browser** — never claim done without screenshot comparison.
 6. **Iterate until perfect** — if the browser doesn't match Figma, fix and re-check.
+7. **Always place the block on a page when the WordPress MCP is available.** Ask the user which page if it isn't clear from the arguments or Figma context. Never guess silently.
 
 ## Step 1: Parse Arguments
 
@@ -195,34 +196,64 @@ If build fails, fix the issues and rebuild.
 
 ## Step 6: Add Block to Page with Content
 
-If the user specified a page or it's obvious from context:
+This step is **mandatory whenever the WordPress MCP is available**. The block must be placed on the right page with content from the Figma design — not just scaffolded.
 
-### 6a. Find the page
+### 6a. Check WordPress MCP availability
+
+Check whether `mcp__wordpress__*` tools are available in this session.
+
+- **If unavailable:** Skip to Step 7. In the final report, note: "WordPress MCP not available — block scaffolded only; manual placement required."
+- **If available:** Continue.
+
+### 6b. Determine the target page
+
+Decide which page the block belongs on, in this priority order:
+
+1. **User explicitly named a page** in `$ARGUMENTS` (e.g. "on the homepage", "on the contact page") → use that page.
+2. **Figma context strongly implies a page** (e.g. the Figma frame is named "Homepage / Hero", or the parent frame is clearly a specific page) → use that page, but state your inference and confirm before inserting.
+3. **Otherwise → ASK THE USER.** Do not guess. List the available pages first:
+
+   ```
+   mcp__wordpress__wp_list_posts with post_type: "page", per_page: 50
+   ```
+
+   Then ask the user something like:
+   > "Which page should this block be added to? I found these pages: [list with titles + IDs]. Reply with a page title/ID, or say 'skip' to leave the block unplaced."
+
+   If the user says skip / no / not now, jump to Step 7 and note in the final report that the block was not placed.
+
+### 6c. Find the page
+
+If the page name is known but the ID isn't:
 
 ```
 mcp__wordpress__wp_list_posts with post_type: "page", search: "<page-name>"
 ```
 
-### 6b. Check current blocks on the page
+If multiple matches return, ask the user which one.
+
+### 6d. Check current blocks on the page
 
 ```
 mcp__wordpress__wp_list_post_blocks with post_id: <id>
 ```
 
-### 6c. Find the correct position
+### 6e. Determine the correct position
 
-Determine where the block should go based on user instructions or logical page flow.
+- If the user specified a position ("after the hero", "at the bottom", "above the footer CTA"), respect it.
+- If the position is implied by the Figma frame ordering, use that.
+- If unclear and there are several reasonable spots, **ask the user** with the list of current blocks and your suggested index.
 
-### 6d. Find media for images
+### 6f. Find media for images
 
 If the block needs images:
 ```
 mcp__wordpress__wp_list_media with mime_type: "image"
 ```
 
-Select the most appropriate image that matches the Figma design.
+Select the most appropriate image that matches the Figma design. If no clear match exists and the user hasn't supplied one, ask before picking a stand-in.
 
-### 6e. Insert the block
+### 6g. Insert the block
 
 ```
 mcp__wordpress__wp_insert_post_block with:
@@ -232,9 +263,9 @@ mcp__wordpress__wp_insert_post_block with:
   data: <JSON with ACF field values matching Figma content>
 ```
 
-**Fill ALL content from the Figma design**: titles, text, buttons, images, layout options.
+**Fill ALL content from the Figma design**: titles, text, buttons, images, layout options. An empty block placement is not acceptable — populate every field that has a corresponding value in the design.
 
-### 6f. Move if needed
+### 6h. Move if needed
 
 If position is wrong:
 ```
@@ -304,7 +335,7 @@ Only after visual verification passes:
 - `acf-json/group_block_{name}.json` — ACF field group
 
 ### Page Integration
-- **Page:** {page name} ({url})
+- **Page:** {page name} ({url}) — or "Not placed (WordPress MCP unavailable)" / "Not placed (user skipped)"
 - **Position:** {position description}
 - **Content:** Filled from Figma design
 
