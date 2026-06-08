@@ -6,7 +6,7 @@
     },
     "metadata": {
         "description": "Roan's Claude Code plugins - agents and skills for development",
-        "version": "2.0.0"
+        "version": "2.1.0"
     },
     "plugins": [
         {
@@ -121,6 +121,14 @@
             "version": "1.1.0",
             "source": "./bootstrap-to-tailwind",
             "category": "development",
+            "strict": false
+        },
+        {
+            "name": "ultrapowers",
+            "description": "Tackle large tasks as a series of one-session 'slices': brainstorm a high-level overview, then implement -> handoff -> complete in fresh sessions so output quality never degrades. Run autonomously with /autopilot, or sketch ideas mid-brainstorm with /visualize. Small tasks are built inline.",
+            "version": "1.0.0",
+            "source": "./ultrapowers",
+            "category": "productivity",
             "strict": false
         }
     ]

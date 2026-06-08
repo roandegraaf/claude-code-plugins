@@ -1,0 +1,23 @@
+{
+  "name": "ultrapowers",
+  "version": "1.0.0",
+  "description": "Tackle large tasks as a series of one-session 'slices': brainstorm a high-level overview, then implement -> handoff -> complete in fresh sessions so output quality never degrades. Run it autonomously with /autopilot, or sketch ideas mid-brainstorm with /visualize. Small tasks are built inline.",
+  "author": {
+    "name": "Roan de Graaf",
+    "email": "info@roandegraaf.nl"
+  },
+  "homepage": "https://github.com/anthropics/claude-code-plugins",
+  "keywords": [
+    "workflow",
+    "brainstorm",
+    "planning",
+    "slices",
+    "context-management",
+    "autonomous",
+    "autopilot",
+    "subagents",
+    "mockup",
+    "implementation"
+  ],
+  "license": "MIT"
+}
