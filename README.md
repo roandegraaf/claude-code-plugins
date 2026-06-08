@@ -206,6 +206,28 @@ Autonomously migrate WordPress themes from Bootstrap 4 CSS to Tailwind CSS v4 wi
 
 ---
 
+### :zap: Ultrapowers
+
+Tackle large tasks as a series of one-session "slices" so output quality never degrades from a bloated context. Brainstorm a high-level overview that acts as a guardrail, then loop implement → handoff → complete in fresh sessions — re-assessing what's left after each slice instead of planning everything up front.
+
+**Install:**
+```bash
+/plugin install ultrapowers@roans-cc-plugins
+```
+
+**Commands:**
+- **`/brainstorm <idea>`** — Think through a task. Small ones are built inline; large ones get a high-level `OVERVIEW.md` (north star + checkable Definition of Done) and a first `NEXT_SLIDE.md`
+- **`/implement [slug]`** — In a fresh session, build only the current slice from `NEXT_SLIDE.md`, guarded by the overview
+- **`/handoff [slug]`** — Log progress, then write the next slice — or route to `/complete` when the Definition of Done is met
+- **`/complete [slug]`** — Re-verify against the code, fold anything durable into `CLAUDE.md`, and archive the task docs
+- **`/autopilot [slug]`** — Run the whole loop autonomously via fresh per-slice subagents; pauses only to ask you a question, and checkpoints itself before its context fills up
+- **`/visualize <idea>`** — Spin up a token-frugal HTML mockup on a local server during a brainstorm, with optional click-to-pick options
+
+**Usage:**
+Run `/brainstorm add a billing dashboard` to scope it, then `/implement` → `/handoff` in fresh sessions until done, finishing with `/complete`. Or hand the whole thing to `/autopilot <slug>` and let it run unattended. State lives in `docs/slides/<slug>/`, so you can stop and resume anytime.
+
+---
+
 ## Usage
 
 ### Agents (python-simplifier, flutter-simplifier, swift-simplifier, php-wordpress-simplifier, laravel-simplifier)
@@ -296,6 +318,16 @@ claude-code-plugins/
 │               ├── scss-migration.md
 │               ├── js-components.md
 │               └── build-pipeline.md
+├── ultrapowers/
+│   ├── .claude-plugin/
+│   │   └── plugin.json           # Plugin metadata
+│   └── skills/
+│       ├── brainstorm/SKILL.md   # /brainstorm <idea>
+│       ├── implement/SKILL.md    # /implement [slug]
+│       ├── handoff/SKILL.md      # /handoff [slug]
+│       ├── complete/SKILL.md     # /complete [slug]
+│       ├── autopilot/SKILL.md    # /autopilot [slug]
+│       └── visualize/SKILL.md    # /visualize <idea>
 ├── README.md
 └── LICENSE
 ```
