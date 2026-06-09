@@ -119,5 +119,7 @@ Pick a first slice that establishes a foundation (scaffolding, data model, the t
 Tell the user the slug, the paths you wrote, and the exact next step:
 
 > Task `<task-slug>` scoped. Wrote `docs/slides/<task-slug>/OVERVIEW.md` and `docs/slides/<task-slug>/NEXT_SLIDE.md`.
-> **Start a fresh session and run `/implement <task-slug>`** to build the first slice.
+> **Start a fresh session**, then choose how to build it:
+> - **`/implement <task-slug>`** — build the first slice, then `/handoff` and repeat manually (one slice per session, with a `/clear` in between). Best when you want to review between slices.
+> - **`/autopilot <task-slug>`** — run every remaining slice back-to-back autonomously to the Definition of Done, pausing only to ask you a question. Best when you want it driven to completion unattended.
 > Tip: commit `OVERVIEW.md` (and later `PROGRESS.md`) — they're the durable record. `NEXT_SLIDE.md` is transient scaffolding.
