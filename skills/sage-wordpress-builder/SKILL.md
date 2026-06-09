@@ -64,6 +64,15 @@ Props: `id`, `pt` (pt-0/pt-small/pt-medium), `pb`, `background_color`
 
 All support `contentItems` array for conditional display. Available: `x-content.subtitle`, `x-content.title`, `x-content.text`, `x-content.buttons`, `x-content.media`
 
+## Blade Conventions
+
+These rules apply to every Blade template. See [references/blade-components.md](references/blade-components.md) for examples.
+
+1. **Output with `{!! !!}`, not `{{ }}`.** Render field/controller data with `{!! $value !!}`. Escaping and sanitizing happen in the PHP controller (the block's `with()` method), so Blade outputs already-clean values raw — `{{ }}` double-escapes and breaks HTML/WYSIWYG content.
+2. **Image size uses `$size`.** When rendering an image, pass the size via the `$size` variable (our default), e.g. `wp_get_attachment_image($image, $size, ...)`. Don't hardcode `'large'`/`'full'`.
+3. **Never style the container.** The container is a component and adding classes to it conflicts. Put a `<div>` directly inside the container and apply layout/CSS there.
+4. **No inline PHP in Blade.** No `@php` blocks or inline logic in templates. Do all data prep, mapping, escaping, and defaults in the PHP controller (`with()`) and pass finished values to the view.
+
 ## Animations
 
 See [references/animations.md](references/animations.md).
@@ -75,6 +84,8 @@ Use `data-reveal-group` for scroll animations:
   {{-- Children animate in sequence --}}
 </div>
 ```
+
+**Images:** Never animate an `<img>` directly. Always wrap it in a `<div>` and animate the wrapper — Smush rewrites/swaps the `<img>` element and wipes the inline transforms GSAP applies, breaking the animation.
 
 ## Tailwind CSS v4
 

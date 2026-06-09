@@ -1,6 +1,7 @@
 # Scroll Animations
 
 ## Table of Contents
+- [Animating Images](#animating-images)
 - [Dependencies](#dependencies)
 - [GSAP + Lenis Setup](#gsap--lenis-setup)
 - [Reveal Animation Function](#reveal-animation-function)
@@ -10,6 +11,39 @@
 - [Grid Animation Example](#grid-animation-example)
 - [Alternative: Individual Element Animations](#alternative-individual-element-animations)
 - [Performance Tips](#performance-tips)
+
+## Animating Images
+
+**Never animate an `<img>` element directly. Always wrap the image in a `<div>` and apply the animation to that wrapper.**
+
+We use [Smush](https://wordpress.org/plugins/wp-smushit/) to compress and lazy-load images. Smush rewrites and swaps the `<img>` element (lazy-load placeholders, srcset handling, etc.), which clobbers any inline transforms/opacity that GSAP sets on the image itself — the animation breaks or never plays. The wrapping `<div>` is untouched by Smush, so animating the wrapper is safe.
+
+### Do this
+
+```blade
+{{-- Wrapper carries the animation; image stays untouched by Smush --}}
+<div data-reveal="up" class="overflow-hidden">
+  <img src="{{ $image_url }}" alt="{{ $image_alt }}" class="w-full h-auto" />
+</div>
+```
+
+```blade
+{{-- Inside a reveal group, each image is wrapped in its own animatable div --}}
+<div data-reveal-group data-stagger="100" class="grid grid-cols-3 gap-6">
+  @foreach($images as $image)
+    <div class="overflow-hidden">
+      <img src="{{ $image['url'] }}" alt="{{ $image['alt'] }}" class="w-full h-auto" />
+    </div>
+  @endforeach
+</div>
+```
+
+### Never do this
+
+```blade
+{{-- Smush swaps the <img>, wiping GSAP's inline styles — animation breaks --}}
+<img data-reveal="up" src="{{ $image_url }}" alt="{{ $image_alt }}" />
+```
 
 ## Dependencies
 

@@ -1,6 +1,7 @@
 # Blade Components
 
 ## Table of Contents
+- [Blade Conventions](#blade-conventions)
 - [Section Component](#section-component)
 - [Content Components](#content-components)
 - [Subtitle Component](#subtitle-component)
@@ -11,6 +12,74 @@
 - [Media Component](#media-component)
 - [Usage in Blocks](#usage-in-blocks)
 - [Blade Directives](#blade-directives)
+
+## Blade Conventions
+
+### 1. Output with `{!! !!}`
+
+Render controller/field data with `{!! $value !!}`. Sanitizing and escaping are done in the PHP controller (the block's `with()` method), so the view outputs already-clean values raw. `{{ }}` double-escapes values the controller prepared and breaks HTML/WYSIWYG output.
+
+```blade
+{{-- Do --}}
+<span>{!! $label !!}</span>
+
+{{-- Don't — double-escapes controller-prepared output --}}
+<span>{{ $label }}</span>
+```
+
+### 2. Image size via `$size`
+
+When rendering an image, pass the size through the `$size` variable (our default). Don't hardcode size strings.
+
+```blade
+{{-- Do --}}
+{!! wp_get_attachment_image($image, $size, false, ['class' => 'w-full h-auto']) !!}
+
+{{-- Don't --}}
+{!! wp_get_attachment_image($image, 'large', false, ['class' => 'w-full h-auto']) !!}
+```
+
+### 3. Never style the container
+
+The container is a component — adding classes/CSS to it conflicts. Place a `<div>` directly inside the container and apply layout and CSS there.
+
+```blade
+{{-- Do --}}
+<div class="container">
+  <div class="grid grid-cols-2 gap-8">
+    {{-- content --}}
+  </div>
+</div>
+
+{{-- Don't — styling the container conflicts with the component --}}
+<div class="container grid grid-cols-2 gap-8">
+  {{-- content --}}
+</div>
+```
+
+### 4. No inline PHP in Blade
+
+No `@php` blocks or inline logic in templates. Do all data prep — mapping, filtering, defaults, escaping/sanitizing — in the PHP controller (`with()`) and pass finished values to the view. Templates only render.
+
+```php
+// Do — prepare in the controller
+public function with()
+{
+    return array_merge($this->getCommonFields(), [
+        'size'    => 'large',
+        'buttons' => collect(get_field('buttons') ?? [])
+            ->filter(fn ($btn) => !empty($btn['link']))
+            ->all(),
+    ]);
+}
+```
+
+```blade
+{{-- Don't — logic in the template --}}
+@php
+  $buttons = collect($buttons)->filter(fn ($b) => !empty($b['link']));
+@endphp
+```
 
 ## Section Component
 
@@ -209,28 +278,32 @@ All content components support `contentItems` array for conditional display. If 
 
 `resources/views/components/content/buttons.blade.php`
 
+Buttons are filtered (drop entries without a link) in the controller, so the component receives a ready array and contains no inline PHP:
+
+```php
+// Controller — with()
+'buttons' => collect(get_field('buttons') ?? [])
+    ->filter(fn ($btn) => !empty($btn['link']))
+    ->all(),
+```
+
 ```blade
 @props([
-  'buttons' => null,
+  'buttons' => [],
   'contentItems' => [],
   'class' => '',
   'background' => '',
 ])
 
-@php
-$allButtons = collect($buttons ?? [])
-  ->filter(fn ($btn) => !empty($btn['link']));
-@endphp
-
-@if ($allButtons->isNotEmpty() && (!filled($contentItems) || in_array('buttons', $contentItems)))
+@if (filled($buttons) && (!filled($contentItems) || in_array('buttons', $contentItems)))
   <div class="flex flex-wrap items-start gap-4 {{ $class }}">
-    @foreach ($allButtons as $button)
+    @foreach ($buttons as $button)
       <x-content.button
         :href="$button['link']['url']"
         :variant="$button['color'] ?? 'primary'"
         :target="$button['link']['target'] ?? null"
       >
-        {{ $button['link']['title'] }}
+        {!! $button['link']['title'] !!}
       </x-content.button>
     @endforeach
   </div>
@@ -241,7 +314,7 @@ $allButtons = collect($buttons ?? [])
 
 | Prop | Type | Notes |
 |------|------|-------|
-| `buttons` | array | Array from ACF repeater |
+| `buttons` | array | Pre-filtered array from the controller (no empty links) |
 | `contentItems` | array | Content toggle |
 | `class` | string | Additional classes |
 | `background` | string | For styling context |
@@ -284,6 +357,7 @@ $allButtons = collect($buttons ?? [])
 @props([
   'media_type' => 'image',
   'image' => null,
+  'size' => 'large',
   'video_type' => null,
   'video_url' => null,
   'video_file' => null,
@@ -293,7 +367,7 @@ $allButtons = collect($buttons ?? [])
 
 <div class="{{ $class }}">
   @if ($media_type === 'image' && $image)
-    {!! wp_get_attachment_image($image, 'large', false, ['class' => 'w-full h-auto']) !!}
+    {!! wp_get_attachment_image($image, $size, false, ['class' => 'w-full h-auto']) !!}
   @elseif ($media_type === 'video')
     @if ($video_type === 'file' && $video_file)
       <video class="w-full" controls poster="{{ $placeholder ? wp_get_attachment_image_url($placeholder, 'large') : '' }}">
