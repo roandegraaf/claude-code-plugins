@@ -1,6 +1,6 @@
 {
   "name": "ultrapowers",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Tackle large tasks as a series of one-session 'slices': brainstorm a high-level overview, then implement -> handoff -> complete in fresh sessions so output quality never degrades. Run it autonomously with /autopilot, or sketch ideas mid-brainstorm with /visualize. Small tasks are built inline.",
   "author": {
     "name": "Roan de Graaf",

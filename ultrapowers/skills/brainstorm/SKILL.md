@@ -30,7 +30,7 @@ Take the user's seed idea (their message / arguments) and have a short back-and-
 
 Use the **AskUserQuestion** tool only when there is a genuine decision you can't reasonably default (scope boundary, tech choice, a fork that changes the whole shape). Batch related questions. Do **not** interrogate the user — "brainstorm a bit," then move on. If the direction is already clear, skip straight to writing.
 
-If a quick visual would help land an idea (a layout, a flow, a screen), you may offer to sketch it with the **`visualize`** skill — but **ask first and only run it after the user approves**. Never auto-launch it.
+If the idea has a visual dimension — a layout, a flow, a screen, a UI component — **automatically ask** whether to sketch it before moving on. Use the **AskUserQuestion** tool to offer the choice: one option to sketch it now with the **`visualize`** skill, one option to skip and keep brainstorming. Only invoke `visualize` if the user picks the sketch option. Never auto-launch it without that confirmation, and don't bother asking when the task has no visual angle (pure backend, refactors, config, etc.).
 
 ### 2. Gauge the size — small task or large?
 

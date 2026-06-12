@@ -9,7 +9,7 @@ A throwaway sketch to make an idea concrete — not production UI. Built to spen
 
 ## When to run
 - The user runs `/visualize <what to show>`.
-- `/brainstorm` (or any design chat) may run it **only after the user explicitly approves** — ask first, never auto-launch.
+- `/brainstorm` (or any design chat) automatically asks (via AskUserQuestion) whether to sketch a visual idea, and runs this **only if the user picks the sketch option** — never auto-launch without that confirmation.
 
 ## Token rules — follow strictly
 - **One self-contained `.html` file.** Inline everything. To keep markup terse, you may use Tailwind via CDN (`<script src="https://cdn.tailwindcss.com"></script>`); otherwise minimal inline CSS. No build step, no frameworks, no real images (use boxes/placeholders).
