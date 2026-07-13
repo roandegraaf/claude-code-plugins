@@ -1,18 +1,18 @@
 ---
 name: complete
-description: Finalize a fully-implemented slide-workflow task. Use when the user says "/complete", "this task is done", "wrap up the task", or after /handoff reports the Definition of Done is met. Optionally takes a task slug. Re-verifies the OVERVIEW Definition of Done against the actual code, folds anything durable into CLAUDE.md, then archives the task's docs under docs/slides/_archive/<task-slug>/.
+description: Finalize a fully-implemented slice-workflow task. Use when the user says "/complete", "this task is done", "wrap up the task", or after /handoff reports the Definition of Done is met. Optionally takes a task slug. Re-verifies the OVERVIEW Definition of Done against the actual code, folds anything durable into CLAUDE.md, then archives the task's docs under docs/slides/_archive/<task-slug>/.
 ---
 
 # Complete a Task
 
-Final step of the **slide workflow** (`/brainstorm` → `/implement` → `/handoff` → … → **`/complete`**). Run this once, when the whole task is actually finished — not after a single slice.
+Final step of the **slice workflow** (`/brainstorm` → `/implement` → `/handoff` → … → **`/complete`**). Run this once, when the whole task is actually finished — not after a single slice.
 
 ## Resolve which task
 
 Each task lives in its own folder: `docs/slides/<task-slug>/`.
 
 - If the user passed a slug (`/complete user-auth`), use it.
-- Otherwise: one active task folder → use it; several → **AskUserQuestion** to pick.
+- Otherwise list the folders in `docs/slides/`, ignoring `_archive/`: one active task folder → use it; several → **AskUserQuestion** to pick.
 
 ## Procedure
 
@@ -33,9 +33,9 @@ If so and a `CLAUDE.md` exists, update the **relevant section** concisely — ad
 
 If no `CLAUDE.md` exists and the task clearly warrants one, suggest running `/init` rather than creating it unprompted. If nothing durable changed, say so and skip — don't manufacture doc churn.
 
-### 4. Clean up the slide docs
+### 4. Clean up the slice docs
 - Delete the transient `docs/slides/<task-slug>/NEXT_SLIDE.md`.
-- Archive the rest: move `docs/slides/<task-slug>/` → `docs/slides/_archive/<task-slug>/`, preserving `OVERVIEW.md` and `PROGRESS.md` as the historical record. Add a one-line "Completed" marker at the top of the archived `OVERVIEW.md`.
+- Archive the rest: move `docs/slides/<task-slug>/` → `docs/slides/_archive/<task-slug>/`, preserving `OVERVIEW.md` and `PROGRESS.md` as the historical record. If `_archive/<task-slug>/` already exists from an earlier task, archive to `_archive/<task-slug>-2/` (increment as needed) instead of merging into it. Add a one-line "Completed" marker at the top of the archived `OVERVIEW.md`.
 - If the user would rather delete the folder outright (no archive), do that instead — but only when they've said so. Default is archive.
 
 This keeps `docs/slides/` showing only active tasks.

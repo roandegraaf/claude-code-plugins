@@ -5,14 +5,14 @@ description: Record what the current slice accomplished and write the prompt for
 
 # Hand Off to the Next Slice
 
-Third step of the **slide workflow** (`/brainstorm` → `/implement` → **`/handoff`** → loop). Run this in the **same session as the `/implement` that just finished** — it has the freshest knowledge of what was built. The user then starts a **fresh session** for the next `/implement`.
+Third step of the **slice workflow** (`/brainstorm` → `/implement` → **`/handoff`** → loop). Run this in the **same session as the `/implement` that just finished** — it has the freshest knowledge of what was built. The user then starts a **fresh session** for the next `/implement`.
 
 ## Resolve which task
 
 Each task lives in its own folder: `docs/slides/<task-slug>/`.
 
 - If the user passed a slug (`/handoff user-auth`), use it.
-- Otherwise, prefer the task you just implemented in this session. If that's unclear, list the folders in `docs/slides/`: one → use it; several → **AskUserQuestion** to pick.
+- Otherwise, prefer the task you just implemented in this session. If that's unclear, list the folders in `docs/slides/` (ignoring `_archive/`): one → use it; several → **AskUserQuestion** to pick.
 
 All paths below are inside `docs/slides/<task-slug>/`.
 

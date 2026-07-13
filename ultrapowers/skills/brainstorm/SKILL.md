@@ -1,13 +1,13 @@
 ---
 name: brainstorm
-description: Brainstorm a task with the user, then either implement it inline (small tasks) or scope it for the slide workflow (large tasks). Use when the user says "/brainstorm", "let's spin off a new task", "brainstorm a feature", or wants to think through a piece of work before implementing. Small one-session changes are built directly in the same session; large tasks get a per-task folder docs/slides/<task-slug>/ with OVERVIEW.md (the north star) and NEXT_SLIDE.md (the prompt to begin slice 1 in a fresh session).
+description: Brainstorm a task with the user, then either implement it inline (small tasks) or scope it for the slice workflow (large tasks). Use when the user says "/brainstorm", "let's spin off a new task", "brainstorm a feature", or wants to think through a piece of work before implementing. Small one-session changes are built directly in the same session; large tasks get a per-task folder docs/slides/<task-slug>/ with OVERVIEW.md (the north star) and NEXT_SLIDE.md (the prompt to begin slice 1 in a fresh session).
 ---
 
 # Brainstorm a Large Task
 
-First step of the **slide workflow**: brainstorm → `/implement` → `/handoff` → `/implement` → … until done.
+First step of the **slice workflow**: brainstorm → `/implement` → `/handoff` → `/implement` → … until done.
 
-A "slide" (slice) is a chunk of work that comfortably fits in **one session** without burning context and degrading output quality. We do **not** plan all slides up front. We write a high-level overview that acts as a guardrail, then discover each next slice after the previous one ships.
+A "slice" is a chunk of work that comfortably fits in **one session** without burning context and degrading output quality. We do **not** plan all slices up front. We write a high-level overview that acts as a guardrail, then discover each next slice after the previous one ships. (The folder `docs/slides/` and file `NEXT_SLIDE.md` keep their historical names — don't rename them.)
 
 ## File contract — per-task folder
 
@@ -20,7 +20,7 @@ docs/slides/<task-slug>/
   └── PROGRESS.md     (created later by /handoff)
 ```
 
-`<task-slug>` is a short kebab-case name derived from the task (e.g. `user-auth`, `csv-export`, `stripe-billing`). Create the folder if it doesn't exist. If a folder with that slug already exists, pick a more specific slug rather than overwriting it.
+`<task-slug>` is a short kebab-case name derived from the task (e.g. `user-auth`, `csv-export`, `stripe-billing`). Create the folder if it doesn't exist. If a folder with that slug already exists — in `docs/slides/` **or** in `docs/slides/_archive/` — pick a more specific slug rather than overwriting or colliding with it.
 
 ## Procedure
 
@@ -34,15 +34,15 @@ If the idea has a visual dimension — a layout, a flow, a screen, a UI componen
 
 ### 2. Gauge the size — small task or large?
 
-Before scaffolding anything, judge whether the work needs the slide workflow at all:
+Before scaffolding anything, judge whether the work needs the slice workflow at all:
 
 - **Small** = comfortably fits one session: a focused change in a handful of files, no natural multi-slice decomposition, low risk of running out of context. Most fixes, tweaks, and single small features.
 - **Large** = won't fit one session at good quality, or naturally breaks into sequential pieces.
 
 Decide:
 - **Clearly small →** take the **fast path** below. Don't create a slug, `OVERVIEW.md`, `NEXT_SLIDE.md`, or the `docs/slides/` folder — that overhead isn't worth it.
-- **Clearly large →** continue with step 3 (the slide-scoping path).
-- **Unsure →** ask the user with **AskUserQuestion**: "Just build it now in this session" vs "Scope it as a slide task." Respect their choice.
+- **Clearly large →** continue with step 3 (the slice-scoping path).
+- **Unsure →** ask the user with **AskUserQuestion**: "Just build it now in this session" vs "Scope it as a slice task." Respect their choice.
 
 #### Fast path (small tasks)
 1. Briefly confirm: *"This is small enough to just do now — implement it directly?"* (Implementing is harder to undo than scoping, so get a yes first.)
@@ -119,7 +119,7 @@ Pick a first slice that establishes a foundation (scaffolding, data model, the t
 Tell the user the slug, the paths you wrote, and the exact next step:
 
 > Task `<task-slug>` scoped. Wrote `docs/slides/<task-slug>/OVERVIEW.md` and `docs/slides/<task-slug>/NEXT_SLIDE.md`.
-> **Start a fresh session**, then choose how to build it:
+> **Start a fresh session** (`/clear`), then choose how to build it:
 > - **`/implement <task-slug>`** — build the first slice, then `/handoff` and repeat manually (one slice per session, with a `/clear` in between). Best when you want to review between slices.
 > - **`/autopilot <task-slug>`** — run every remaining slice back-to-back autonomously to the Definition of Done, pausing only to ask you a question. Best when you want it driven to completion unattended.
 > Tip: commit `OVERVIEW.md` (and later `PROGRESS.md`) — they're the durable record. `NEXT_SLIDE.md` is transient scaffolding.

@@ -217,10 +217,10 @@ Tackle large tasks as a series of one-session "slices" so output quality never d
 
 **Commands:**
 - **`/brainstorm <idea>`** — Think through a task. Small ones are built inline; large ones get a high-level `OVERVIEW.md` (north star + checkable Definition of Done) and a first `NEXT_SLIDE.md`
-- **`/implement [slug]`** — In a fresh session, build only the current slice from `NEXT_SLIDE.md`, guarded by the overview
+- **`/implement [slug]`** — In a fresh session, build only the current slice from `NEXT_SLIDE.md`, guarded by the overview. When a slice splits into independent chunks, it may fan out parallel subagents to build them faster
 - **`/handoff [slug]`** — Log progress, then write the next slice — or route to `/complete` when the Definition of Done is met
 - **`/complete [slug]`** — Re-verify against the code, fold anything durable into `CLAUDE.md`, and archive the task docs
-- **`/autopilot [slug]`** — Run the whole loop autonomously via fresh per-slice subagents; pauses only to ask you a question, and checkpoints itself before its context fills up
+- **`/autopilot [slug]`** — Run the whole loop autonomously via fresh per-slice `slice-worker` subagents; pauses only to ask you a question, retries a crashed slice once, checkpoints itself before its context fills up, sends you a push notification when it stops or needs input, and never commits on its own
 - **`/visualize <idea>`** — Spin up a token-frugal HTML mockup on a local server during a brainstorm, with optional click-to-pick options
 
 **Usage:**
@@ -321,6 +321,8 @@ claude-code-plugins/
 ├── ultrapowers/
 │   ├── .claude-plugin/
 │   │   └── plugin.json           # Plugin metadata
+│   ├── agents/
+│   │   └── slice-worker.md       # Per-slice subagent used by /autopilot
 │   └── skills/
 │       ├── brainstorm/SKILL.md   # /brainstorm <idea>
 │       ├── implement/SKILL.md    # /implement [slug]

@@ -1,11 +1,11 @@
 ---
 name: implement
-description: Run in a fresh session to build the current slice of a slide-workflow task. Use when the user says "/implement", "implement the next slice", or "continue the task". Optionally takes a task slug. Reads docs/slides/<task-slug>/OVERVIEW.md, PROGRESS.md, and NEXT_SLIDE.md, then builds ONLY the slice described in NEXT_SLIDE.md. Ends by telling the user to run /handoff.
+description: Run in a fresh session to build the current slice of a slice-workflow task. Use when the user says "/implement", "implement the next slice", or "continue the task". Optionally takes a task slug. Reads docs/slides/<task-slug>/OVERVIEW.md, PROGRESS.md, and NEXT_SLIDE.md, then builds ONLY the slice described in NEXT_SLIDE.md. May fan out parallel subagents when the slice splits into independent chunks. Ends by telling the user to run /handoff.
 ---
 
 # Implement the Current Slice
 
-Second step of the **slide workflow** (`/brainstorm` → **`/implement`** → `/handoff` → …). Run this in a **fresh session** so the slice gets full, high-quality context.
+Second step of the **slice workflow** (`/brainstorm` → **`/implement`** → `/handoff` → …). Run this in a **fresh session** so the slice gets full, high-quality context.
 
 A "slice" is one session's worth of work. Your job is to build exactly the slice in `NEXT_SLIDE.md` — no more. The OVERVIEW is the guardrail that keeps you from sprawling.
 
@@ -14,7 +14,7 @@ A "slice" is one session's worth of work. Your job is to build exactly the slice
 Each task lives in its own folder: `docs/slides/<task-slug>/`.
 
 - If the user passed a slug (`/implement user-auth`), use `docs/slides/user-auth/`.
-- Otherwise list the folders in `docs/slides/`:
+- Otherwise list the folders in `docs/slides/`, **ignoring `_archive/`** (completed tasks live there):
   - Exactly one task folder → use it.
   - Several → **AskUserQuestion** to let the user pick which task.
   - None → tell the user to run `/brainstorm` first, then stop.
@@ -35,7 +35,7 @@ If `NEXT_SLIDE.md` is missing for the task, stop and tell the user to run `/hand
 Read the three files above. Since this is a fresh session, those files plus the existing code are your **only** source of truth — read them before touching anything.
 
 ### 2. Orient
-Explore just the parts of the codebase this slice touches. Don't review the whole repo.
+Explore just the parts of the codebase this slice touches. Don't review the whole repo. If several distinct areas need scouting, fan out read-only **Explore** subagents in parallel (one message, multiple Agent calls) instead of reading everything yourself — you keep the conclusions, not the file dumps.
 
 ### 3. Build the slice — and only the slice
 - Stay inside the slice's scope boundaries. Respect the OVERVIEW's **Non-goals**.
@@ -43,8 +43,19 @@ Explore just the parts of the codebase this slice touches. Don't review the whol
 - If you discover the slice is too big to finish well in one session, **stop and narrow it**: ship the coherent part, and note the remainder so `/handoff` can carve it into the next slice. Protecting output quality matters more than finishing the whole slice.
 - If you hit a real decision the docs don't cover, use **AskUserQuestion** rather than guessing.
 
+#### Parallelize inside the slice — your call
+A slice doesn't have to be built serially. When the work splits into genuinely independent chunks — disjoint files, no shared interface still in flux — you may fan out subagents to build them concurrently:
+
+- Spawn them in **one message** so they run in parallel, each with an explicit, **non-overlapping file scope** and the relevant context from OVERVIEW/NEXT_SLIDE pasted into its prompt (subagents don't see your conversation).
+- **Never let two agents touch the same file.** Keep coupled work — shared types, wiring, integration — in this session.
+- You own the result: after the agents return, integrate the pieces and run verification yourself. Relay what they did; don't trust "done" claims blindly.
+- Only split when the seam is obvious. A slice that's really one coupled change is faster (and safer) done directly. This also spends more tokens — worth it for speed on wide slices, waste on narrow ones.
+- For a very wide, repetitive fan-out (the same mechanical change or audit across dozens of files), a dynamic **workflow** (Workflow tool) is the stronger fit — but it spawns many agents and needs the user's explicit opt-in, so propose it and let the user decide; never launch one unprompted.
+
 ### 4. Verify
 Run the relevant tests / build / typecheck for what you changed. Report results honestly — if something fails, say so with the output.
+
+**Never commit, push, or otherwise touch version control on your own** — the user owns git. Leave the changes in the working tree.
 
 ### 5. Hand off
 Do **not** roll straight into the next slice. End by telling the user:
