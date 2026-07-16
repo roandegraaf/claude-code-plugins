@@ -122,4 +122,5 @@ Tell the user the slug, the paths you wrote, and the exact next step:
 > **Start a fresh session** (`/clear`), then choose how to build it:
 > - **`/implement <task-slug>`** — build the first slice, then `/handoff` and repeat manually (one slice per session, with a `/clear` in between). Best when you want to review between slices.
 > - **`/autopilot <task-slug>`** — run every remaining slice back-to-back autonomously to the Definition of Done, pausing only to ask you a question. Best when you want it driven to completion unattended.
+> - **`/ultrapilot <task-slug>`** — like `/autopilot`, but each round a planner carves mutually independent slices (disjoint file scopes) and parallel workers build them concurrently, with a full-verification gate after every wave. Fastest on tasks with parallel surface area; coupled work automatically degrades to serial. Spends the most tokens.
 > Tip: commit `OVERVIEW.md` (and later `PROGRESS.md`) — they're the durable record. `NEXT_SLIDE.md` is transient scaffolding.

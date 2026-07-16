@@ -34,7 +34,7 @@ If so and a `CLAUDE.md` exists, update the **relevant section** concisely — ad
 If no `CLAUDE.md` exists and the task clearly warrants one, suggest running `/init` rather than creating it unprompted. If nothing durable changed, say so and skip — don't manufacture doc churn.
 
 ### 4. Clean up the slice docs
-- Delete the transient `docs/slides/<task-slug>/NEXT_SLIDE.md`.
+- Delete the transient `docs/slides/<task-slug>/NEXT_SLIDE.md` and, if present, the transient `wave/` folder (leftover `/ultrapilot` scaffolding).
 - Archive the rest: move `docs/slides/<task-slug>/` → `docs/slides/_archive/<task-slug>/`, preserving `OVERVIEW.md` and `PROGRESS.md` as the historical record. If `_archive/<task-slug>/` already exists from an earlier task, archive to `_archive/<task-slug>-2/` (increment as needed) instead of merging into it. Add a one-line "Completed" marker at the top of the archived `OVERVIEW.md`.
 - If the user would rather delete the folder outright (no archive), do that instead — but only when they've said so. Default is archive.
 

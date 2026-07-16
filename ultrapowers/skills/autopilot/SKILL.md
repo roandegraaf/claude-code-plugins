@@ -5,7 +5,7 @@ description: Run the slice workflow autonomously — implement every remaining s
 
 # Autopilot — Autonomous Slice Loop
 
-Drives a slice-workflow task (see `/brainstorm`) to completion on its own. Each slice runs in a **fresh subagent context** — that subagent is the autonomous equivalent of `/clear` + `/implement` + `/handoff` in one clean session. You (the orchestrator) stay thin: spawn a slice, react to its result, repeat.
+Drives a slice-workflow task (see `/brainstorm`) to completion on its own. Each slice runs in a **fresh subagent context** — that subagent is the autonomous equivalent of `/clear` + `/implement` + `/handoff` in one clean session. You (the orchestrator) stay thin: spawn a slice, react to its result, repeat. Sibling: **`/ultrapilot`** runs this same loop with parallel waves of independent slices — faster on wide tasks, same guardrails; this serial loop remains the conservative default.
 
 This is the inverse of frugal: an unattended multi-slice run can spend a lot of tokens. The iteration cap and the context checkpoint bound it. Use the manual loop for tight cost control.
 
