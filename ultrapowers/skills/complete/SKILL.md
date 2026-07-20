@@ -1,6 +1,6 @@
 ---
 name: complete
-description: Finalize a fully-implemented slice-workflow task. Use when the user says "/complete", "this task is done", "wrap up the task", or after /handoff reports the Definition of Done is met. Optionally takes a task slug. Re-verifies the OVERVIEW Definition of Done against the actual code, folds anything durable into CLAUDE.md, then archives the task's docs under docs/slides/_archive/<task-slug>/.
+description: Finalize a fully-implemented slice-workflow task. Use when the user says "/complete", "this task is done", "wrap up the task", or after /handoff reports the Definition of Done is met. Optionally takes a task slug. Re-verifies the OVERVIEW Definition of Done against the actual code, folds anything durable into CLAUDE.md, then archives the task's docs under docs/slides/_archive/<task-slug>/ — writing an acceptance checklist for any items only the user can verify.
 ---
 
 # Complete a Task
@@ -13,16 +13,21 @@ Each task lives in its own folder: `docs/slides/<task-slug>/`.
 
 - If the user passed a slug (`/complete user-auth`), use it.
 - Otherwise list the folders in `docs/slides/`, ignoring `_archive/`: one active task folder → use it; several → **AskUserQuestion** to pick.
+- If the slug exists only in `_archive/`: **short-circuit** — the task is already completed and archived; say so and stop. Don't re-verify from scratch.
 
 ## Procedure
 
 ### 1. Re-verify the Definition of Done — don't take it on faith
-Read `docs/slides/<task-slug>/OVERVIEW.md` and check **every** Definition-of-Done item against the **actual code on disk**, not against `PROGRESS.md`'s claims. A handoff can mark something done that regressed or was only half-built.
+First reconcile the DoD text with reality: if decisions recorded in `PROGRESS.md` legitimately changed the goal mid-task (scope cut, requirement reversed), update the affected items with a one-line note — otherwise you verify against stale intent. Then read `docs/slides/<task-slug>/OVERVIEW.md` and check **every** Definition-of-Done item against the **actual code on disk**, not against `PROGRESS.md`'s claims. A handoff can mark something done that regressed or was only half-built. Tick each item you verify to `[x]` in `OVERVIEW.md` as you go — the archived file should carry the per-item record.
 
-**If any item is unmet: STOP.** Report exactly what's missing and tell the user to run `/implement <task-slug>` to finish it (refresh `NEXT_SLIDE.md` with the gap if helpful). Do not finalize a task that isn't done.
+Split the items:
+- **Automation-verifiable and unmet: STOP.** Report exactly what's missing and tell the user to run `/implement <task-slug>` to finish it (refresh `NEXT_SLIDE.md` with the gap if helpful). Do not finalize a task that isn't done.
+- **`[user-gated]` items** (live deploys, hardware runs, paid live calls, sign-offs) and items workers reported as `deferred`: these do NOT block completion — they become the **acceptance checklist** in step 4. Leave them `[ ]`.
 
 ### 2. Quality gate
 - Run the project's tests / build / typecheck for what this task touched. Report results honestly — if something fails, surface it and stop here.
+- **Attempt a lightweight runtime smoke** where feasible: build and boot the app / hit the main route / run the binary once. Headless-green tasks have shipped unusable UIs before; a two-minute smoke catches that.
+- Aggregate the task's open flags from `PROGRESS.md` — every `Runtime-unverified:` and `Placeholder choices:` line — and surface them prominently in the report. Anything still runtime-unverified after the smoke goes onto the acceptance checklist.
 - For a substantial task, suggest the user run `/code-review` (and `/security-review` if it touched auth, data handling, or external input) before committing. Don't silently skip this for big changes.
 
 ### 3. Update project docs (CLAUDE.md)
@@ -33,15 +38,18 @@ If so and a `CLAUDE.md` exists, update the **relevant section** concisely — ad
 
 If no `CLAUDE.md` exists and the task clearly warrants one, suggest running `/init` rather than creating it unprompted. If nothing durable changed, say so and skip — don't manufacture doc churn.
 
-### 4. Clean up the slice docs
-- Delete the transient `docs/slides/<task-slug>/NEXT_SLIDE.md` and, if present, the transient `wave/` folder (leftover `/ultrapilot` scaffolding).
-- Archive the rest: move `docs/slides/<task-slug>/` → `docs/slides/_archive/<task-slug>/`, preserving `OVERVIEW.md` and `PROGRESS.md` as the historical record. If `_archive/<task-slug>/` already exists from an earlier task, archive to `_archive/<task-slug>-2/` (increment as needed) instead of merging into it. Add a one-line "Completed" marker at the top of the archived `OVERVIEW.md`.
+### 4. Acceptance checklist (only when user-gated/deferred items remain)
+If step 1 or 2 left open `[user-gated]`, deferred, or runtime-unverified items, write `docs/slides/<task-slug>/ACCEPTANCE.md` before archiving: one checklist entry per item with the **exact steps, commands, and expected outcome** the user needs to verify it themselves (which URL to open, which command to run on which machine, what "working" looks like, estimated cost for paid runs). This file archives with the task — the work is code-complete; this is what's left for a human. Don't make the user reverse-engineer how to exercise their own feature.
+
+### 5. Clean up the slice docs
+- Delete the transient `docs/slides/<task-slug>/NEXT_SLIDE.md` and, if present, the transient `wave/` and `status/` folders (leftover autopilot/ultrapilot scaffolding).
+- Archive the rest: move `docs/slides/<task-slug>/` → `docs/slides/_archive/<task-slug>/`, preserving `OVERVIEW.md`, `PROGRESS.md`, and any `ACCEPTANCE.md` as the historical record. If `_archive/<task-slug>/` already exists from an earlier task, archive to `_archive/<task-slug>-2/` (increment as needed) instead of merging into it. Add a one-line marker at the top of the archived `OVERVIEW.md`: "Completed" — or "Completed (pending acceptance: N items, see ACCEPTANCE.md)".
 - If the user would rather delete the folder outright (no archive), do that instead — but only when they've said so. Default is archive.
 
-This keeps `docs/slides/` showing only active tasks.
+This keeps `docs/slides/` showing only active tasks — a task blocked on human acceptance archives WITH its checklist instead of lingering in limbo.
 
-### 5. Report & suggest a commit
-Summarize what you verified, any CLAUDE.md changes, and where the docs were archived. Then suggest a commit (don't commit unless the user asks):
+### 6. Report & suggest a commit
+Summarize what you verified, any open acceptance items (with the ACCEPTANCE.md path), surfaced placeholder/runtime-unverified flags, CLAUDE.md changes, and where the docs were archived. Then suggest a commit (don't commit unless the user asks):
 
-> Task `<task-slug>` complete. Verified all Definition-of-Done items, updated `CLAUDE.md` (<what>), and archived docs to `docs/slides/_archive/<task-slug>/`.
+> Task `<task-slug>` complete. Verified N Definition-of-Done items against the code (M awaiting your acceptance — see `docs/slides/_archive/<task-slug>/ACCEPTANCE.md`), updated `CLAUDE.md` (<what>), and archived docs to `docs/slides/_archive/<task-slug>/`.
 > Suggested next step: review and commit. Want me to commit it?

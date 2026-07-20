@@ -1,7 +1,7 @@
 {
   "name": "ultrapowers",
-  "version": "1.3.0",
-  "description": "Tackle large tasks as a series of one-session 'slices': brainstorm a high-level overview, then implement -> handoff -> complete in fresh sessions so output quality never degrades. Slices may fan out parallel subagents for independent chunks. Run it autonomously with /autopilot, in parallel waves of independent slices with /ultrapilot, or sketch ideas mid-brainstorm with /visualize. Small tasks are built inline.",
+  "version": "1.4.0",
+  "description": "Tackle large tasks as a series of one-session 'slices': brainstorm a high-level overview, then implement -> handoff -> complete in fresh sessions so output quality never degrades. Slices may fan out parallel subagents for independent chunks. Run it autonomously with /autopilot (with per-slice review gates or fully unattended through context checkpoints), in parallel waves of independent slices with /ultrapilot, or sketch ideas mid-brainstorm with /visualize. Tasks blocked on human-only steps archive with an acceptance checklist instead of stalling. Small tasks are built inline.",
   "author": {
     "name": "Roan de Graaf",
     "email": "info@roandegraaf.nl"

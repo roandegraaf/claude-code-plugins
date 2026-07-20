@@ -74,20 +74,30 @@ Explicitly what we are NOT doing (this keeps slices from sprawling).
 ## Key decisions & constraints
 Tech choices, patterns to follow, hard constraints, things already decided.
 
+## Preconditions & external dependencies
+Everything only the user can provide, discovered NOW instead of stalling an
+autonomous run later: API keys, service accounts, OAuth/dashboard approvals,
+paid tiers or spend approvals, hardware, third-party sign-offs. "None" is fine.
+
 ## Building blocks
 The major areas/components involved — unordered. Not a step-by-step plan.
 
 ## Definition of Done
 A short, CHECKABLE checklist. Each item must be verifiable by looking at the
 code or running something — not a vague aspiration. This is what lets us STOP.
+Tag items only a human can perform or verify (live deploy, hardware run, paid
+live call, sign-off) with `[user-gated]` — automation treats those as
+acceptance items for the user, not as blockers.
 - [ ] ...
-- [ ] ...
+- [ ] ... `[user-gated]`
 
 ## Open questions
 Anything still undecided (or "None").
 ```
 
 The **Definition of Done** is the most important section. Make every item concrete and checkable — `/handoff` uses it to decide when the task is complete and to stop manufacturing new slices.
+
+If the Preconditions section is non-empty, surface it to the user as an upfront checklist during the brainstorm ("you'll need to have X, Y ready") — every credential discovered mid-run is a stall in an otherwise autonomous session.
 
 ### 5. Write `docs/slides/<task-slug>/NEXT_SLIDE.md`
 
@@ -120,7 +130,9 @@ Tell the user the slug, the paths you wrote, and the exact next step:
 
 > Task `<task-slug>` scoped. Wrote `docs/slides/<task-slug>/OVERVIEW.md` and `docs/slides/<task-slug>/NEXT_SLIDE.md`.
 > **Start a fresh session** (`/clear`), then choose how to build it:
-> - **`/implement <task-slug>`** — build the first slice, then `/handoff` and repeat manually (one slice per session, with a `/clear` in between). Best when you want to review between slices.
-> - **`/autopilot <task-slug>`** — run every remaining slice back-to-back autonomously to the Definition of Done, pausing only to ask you a question. Best when you want it driven to completion unattended.
-> - **`/ultrapilot <task-slug>`** — like `/autopilot`, but each round a planner carves mutually independent slices (disjoint file scopes) and parallel workers build them concurrently, with a full-verification gate after every wave. Fastest on tasks with parallel surface area; coupled work automatically degrades to serial. Spends the most tokens.
+> - **`/implement <task-slug>`** — build the first slice, then `/handoff` and repeat manually (one slice per session, with a `/clear` in between). Maximum control.
+> - **`/autopilot <task-slug>`** — run every remaining slice back-to-back autonomously to the Definition of Done, pausing only to ask you a question. Add **`review`** to approve each slice before the next starts, or **`unattended`** to run through context checkpoints without you (e.g. overnight).
+> - **`/ultrapilot <task-slug>`** — like `/autopilot`, but each round a planner carves mutually independent slices (disjoint file scopes) and parallel workers build them concurrently, with a full-verification gate after every wave. Fastest on tasks with parallel surface area; coupled work automatically degrades to serial. Spends the most tokens. Also takes `review` / `unattended`.
 > Tip: commit `OVERVIEW.md` (and later `PROGRESS.md`) — they're the durable record. `NEXT_SLIDE.md` is transient scaffolding.
+
+If other task folders in `docs/slides/` are sitting scoped-but-unstarted (no `PROGRESS.md`), mention them in one line — they rot silently otherwise.

@@ -16,7 +16,7 @@ Each task lives in its own folder: `docs/slides/<task-slug>/`.
 - If the user passed a slug (`/implement user-auth`), use `docs/slides/user-auth/`.
 - Otherwise list the folders in `docs/slides/`, **ignoring `_archive/`** (completed tasks live there):
   - Exactly one task folder → use it.
-  - Several → **AskUserQuestion** to let the user pick which task.
+  - Several → **AskUserQuestion** to let the user pick which task. Flag any folder with no `PROGRESS.md` as "scoped, never started" — such tasks rot silently.
   - None → tell the user to run `/brainstorm` first, then stop.
 
 Once resolved, all paths below are inside `docs/slides/<task-slug>/`.
@@ -32,7 +32,7 @@ If `NEXT_SLIDE.md` is missing for the task, stop and tell the user to run `/hand
 ## Procedure
 
 ### 1. Load state
-Read the three files above. Since this is a fresh session, those files plus the existing code are your **only** source of truth — read them before touching anything.
+Read the three files above. From `PROGRESS.md`, read the `## Current state` header plus the last 2–3 slice entries — skim older entries only when something references them; the log grows unbounded and the header is the compact truth. Since this is a fresh session, those files plus the existing code are your **only** source of truth — read them before touching anything.
 
 ### 2. Orient
 Explore just the parts of the codebase this slice touches. Don't review the whole repo. If several distinct areas need scouting, fan out read-only **Explore** subagents in parallel (one message, multiple Agent calls) instead of reading everything yourself — you keep the conclusions, not the file dumps.
@@ -42,6 +42,7 @@ Explore just the parts of the codebase this slice touches. Don't review the whol
 - Follow the key decisions / patterns recorded in OVERVIEW.
 - If you discover the slice is too big to finish well in one session, **stop and narrow it**: ship the coherent part, and note the remainder so `/handoff` can carve it into the next slice. Protecting output quality matters more than finishing the whole slice.
 - If you hit a real decision the docs don't cover, use **AskUserQuestion** rather than guessing.
+- If you hit an **external wall** — a paid run needing approval, credentials or a dashboard only the user can touch, hardware — don't grind on it: build and verify everything up to that point, tell the user the exact command/action (with estimated cost/time), and mark it as deferred in the handoff. Same for subjective choices the docs don't pin down (placeholder assets, copy, colors): make a reasonable call but flag it for review in the handoff — never present it as settled design.
 
 #### Parallelize inside the slice — your call
 A slice doesn't have to be built serially. When the work splits into genuinely independent chunks — disjoint files, no shared interface still in flux — you may fan out subagents to build them concurrently:
@@ -53,7 +54,9 @@ A slice doesn't have to be built serially. When the work splits into genuinely i
 - For a very wide, repetitive fan-out (the same mechanical change or audit across dozens of files), a dynamic **workflow** (Workflow tool) is the stronger fit — but it spawns many agents and needs the user's explicit opt-in, so propose it and let the user decide; never launch one unprompted.
 
 ### 4. Verify
-Run the relevant tests / build / typecheck for what you changed. Report results honestly — if something fails, say so with the output.
+Run the relevant tests / build / typecheck for what you changed. Exit codes are the truth — stale IDE/language-server diagnostics (e.g. SourceKit) routinely report phantom errors on code that builds clean. Report results honestly — if something fails, say so with the output.
+
+**Headless green is not proof for user-facing changes.** If the slice changed UI or interactive behavior, exercise it live when the environment allows (dev server + browser tools, run the app). If a live check genuinely isn't possible this session, say so explicitly and record it as `Runtime-unverified` in the handoff — unverified UI slices have shipped invisible breakage for multiple sessions before anyone noticed.
 
 **Never commit, push, or otherwise touch version control on your own** — the user owns git. Leave the changes in the working tree.
 

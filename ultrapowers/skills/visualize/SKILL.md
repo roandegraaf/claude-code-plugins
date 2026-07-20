@@ -19,12 +19,13 @@ A throwaway sketch to make an idea concrete — not production UI. Built to spen
 
 ## Steps
 1. Write the mockup to `.mockups/<slug>.html` (derive `<slug>` from the idea; create the dir).
-2. Start the server **once**, detached, logs discarded (reused for the rest of the session):
+2. Compute this project's port once (deterministic per repo path, so a server left running by ANOTHER project can never squat it), then start the server **once**, detached (reused for the rest of the session):
    ```bash
-   mkdir -p .mockups && nohup python3 -m http.server 7331 --directory .mockups >>.mockups/.server.log 2>&1 &
+   port=$((7300 + $(pwd | cksum | cut -d' ' -f1) % 100))
+   mkdir -p .mockups && nohup python3 -m http.server "$port" --directory .mockups >>.mockups/.server.log 2>&1 &
    ```
-   If a server is already on the port, this new process just exits quietly — that's fine, the existing one keeps serving. (The log file captures clicks for Pick mode; see below.)
-3. Open it (macOS): `open "http://localhost:7331/<slug>.html"`  · Linux: `xdg-open ...`
+   If a server is already on the port, this new process just exits quietly — that's fine: with per-project ports, whatever is on this port is serving this repo's `.mockups`. (The log file captures clicks for Pick mode; see below.) Shell state doesn't persist between commands — recompute `$port` in each new shell, or substitute the literal number once you know it.
+3. Open it (macOS): `open "http://localhost:$port/<slug>.html"`  · Linux: `xdg-open ...`
 4. Tell the user the URL in one short line. **To iterate:** overwrite the same file — the user refreshes, no restart needed.
 
 ## Pick mode — clickable options
@@ -57,9 +58,9 @@ When the point is to **choose** between variants (button styles, layouts, copy, 
   (Don't "fix" the count vars back to `$(grep -c … || echo 0)` — when the log exists with no picks yet, `grep -c` prints `0` AND exits 1, so the `||` would append a second `0` and break the integer comparison.)
   Tell the user *"click your preferred option — I'll pick it up automatically"* and stop your turn. When the background task returns, parse the trailing segment of `/__pick__/<id>` (URL-encoded) as the choice and continue. `TIMEOUT` (~10 min) means they didn't click — ask if they still want to.
 
-> The server returns 404 for `/__pick__/…` — expected; we only care that it logged the request. This needs the server logging to `.mockups/.server.log` (the start command above does this). If an older server is still running with logs discarded, restart it: `lsof -ti:7331 | xargs kill` then re-run the start command.
+> The server returns 404 for `/__pick__/…` — expected; we only care that it logged the request. This needs the server logging to `.mockups/.server.log` (the start command above does this). If an older server is still running with logs discarded, restart it: `lsof -ti:$port | xargs kill` then re-run the start command.
 
 ## Notes
 - Mockups live in `.mockups/` (HTML + `.server.log`) — transient. Suggest adding it to `.gitignore` if the repo is committed.
-- The server runs for the session. Stop it (or clear a stale one serving the wrong folder) with: `lsof -ti:7331 | xargs kill`.
+- The server runs for the session. Stop it (or clear a stale one) with: `lsof -ti:$port | xargs kill`.
 - If `python3` isn't found, fall back to `python`.
