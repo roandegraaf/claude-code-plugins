@@ -26,6 +26,7 @@ Split the items:
 
 ### 2. Quality gate
 - Run the project's tests / build / typecheck for what this task touched. Report results honestly — if something fails, surface it and stop here.
+- **Let a fresh context grade the work.** Whoever built this task — a slice worker, an autopilot loop, or you — is the wrong judge of it: the reasoning that produced the code also rationalizes it. Resolve the review range yourself first, don't leave it to the subagent: base = the commit just before this task's first commit, or `HEAD` if nothing was committed mid-task. Then spawn ONE reviewer subagent and give it `git diff <base>` plus the working tree, the OVERVIEW's Goal, and **only the automation-verifiable Definition-of-Done items** from step 1 — `[user-gated]` and deferred items are explicitly out of its scope, or it will dutifully report the user's own acceptance work as a gap and stall the task. Instruction, verbatim: *"Report only gaps that break correctness or leave one of the listed Definition-of-Done items unmet. Cite file:line. Style preferences, hypothetical edge cases, and 'this could be more robust' are not findings. If the work is sound, say so plainly."* A reviewer told to find gaps will manufacture some — that narrow brief is what keeps this from becoming defensive-code churn. Fold genuine findings into the report; if one leaves a listed item unmet, treat it as step 1's unmet branch and stop.
 - **Attempt a lightweight runtime smoke** where feasible: build and boot the app / hit the main route / run the binary once. Headless-green tasks have shipped unusable UIs before; a two-minute smoke catches that.
 - Aggregate the task's open flags from `PROGRESS.md` — every `Runtime-unverified:` and `Placeholder choices:` line — and surface them prominently in the report. Anything still runtime-unverified after the smoke goes onto the acceptance checklist.
 - For a substantial task, suggest the user run `/code-review` (and `/security-review` if it touched auth, data handling, or external input) before committing. Don't silently skip this for big changes.
@@ -34,7 +35,7 @@ Split the items:
 Decide whether this task introduced anything a future session genuinely needs and can't trivially infer from the code:
 - New commands (build/test/run/deploy), new top-level directories or modules, a new architectural pattern or convention, a non-obvious gotcha or constraint.
 
-If so and a `CLAUDE.md` exists, update the **relevant section** concisely — additive edits, no duplication of what's obvious from code. If there are nested/area-specific `CLAUDE.md` files, update the closest one.
+If so and a `CLAUDE.md` exists, update the **relevant section** concisely — additive edits, no duplication of what's obvious from code. Test every line you're about to add: *would removing it cause a future session to make a mistake?* If not, don't add it. A bloated `CLAUDE.md` gets ignored wholesale, which costs far more than the line you left out. If there are nested/area-specific `CLAUDE.md` files, update the closest one.
 
 If no `CLAUDE.md` exists and the task clearly warrants one, suggest running `/init` rather than creating it unprompted. If nothing durable changed, say so and skip — don't manufacture doc churn.
 

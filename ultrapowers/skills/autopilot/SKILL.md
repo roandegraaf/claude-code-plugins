@@ -19,9 +19,13 @@ Because each slice runs in a subagent, the orchestrator only accumulates terse s
 - **`review`** — the middle ground between fully autonomous and the manual loop: after every slice's handoff, present a two-line summary plus `git diff --stat`, then **AskUserQuestion**: continue / adjust course (fold their note into `NEXT_SLIDE.md` before the next spawn) / stop. Checkpoints still apply.
 - **`unattended`** — never end the turn at a checkpoint; refresh context via **continuation legs** (see Checkpoint) and run to the Definition of Done, the cap, or a real block. Before starting, remind the user that on a laptop the machine sleeping kills an overnight run — suggest `caffeinate -dims` (macOS) in another terminal, or a cloud session.
 
-## Precondition — permission mode
+## Precondition — permission mode & git safety
 
-Slice subagents are spawned with `mode: "acceptEdits"` so file edits don't block, but **shell commands keep their safety rail**. First check the project allowlist (`.claude/settings.json` / `.claude/settings.local.json` permissions): if the project's test/build commands are already covered, say nothing — don't repeat a boilerplate warning every run. Only when they are NOT covered, warn once that permission prompts can stall an unattended run and point at `/fewer-permission-prompts` or the allowlist.
+Subagents **inherit this session's permission mode**; you cannot set it per spawn. So the run must START in the mode you want the workers to have: **auto mode** (`Shift+Tab`, or launch with `claude --permission-mode auto`) for an unattended run, `acceptEdits` at minimum. In `default`/manual mode every worker file edit prompts and the loop stalls on the first slice. Raise this once, and only if the session isn't already in one of those modes.
+
+Two follow-ons, one line each, only when they apply:
+- **Git.** Under auto mode the classifier will approve commits and pushes to this repo — but nothing in this workflow ever commits, pushes, or deploys on its own. Before an unattended run, offer the hard guarantee: `"permissions": {"deny": ["Bash(git commit:*)", "Bash(git push:*)"]}` in `.claude/settings.local.json`. A boundary stated only in conversation is the soft version — compaction can drop it. Say in the same breath that those rules persist, so they should come back out when the run ends — otherwise `/complete`'s own commit suggestion is blocked too.
+- **Shell commands.** Check the project allowlist (`.claude/settings.json` / `.claude/settings.local.json`): if the test/build commands are covered, say nothing. If not, warn once and point at `/fewer-permission-prompts` — auto mode falls back to prompting after 3 consecutive (or 20 total) classifier blocks, which is how an overnight run actually dies.
 
 ## Resolve which task
 
@@ -39,7 +43,7 @@ Autopilot can be launched at any point, including in the middle of a manual sess
 
 Track `progressCount` = number of `## Slice:` entries in `docs/slides/<task-slug>/PROGRESS.md` (0 if absent). Then repeat up to `max` times:
 
-1. **Spawn one slice subagent** using this plugin's **`ultrapowers:slice-worker`** agent type — its definition carries the full slice protocol. Spawn it **synchronously** (`run_in_background: false`), `mode: "acceptEdits"`, named `slice-N`. The spawn prompt (template below) is the COMPLETE assignment — never follow up with a SendMessage repeating the task; SendMessage is only for delivering `needs_input` answers. If the agent type is unavailable, read `agents/slice-worker.md` in this plugin and inline its body into a default-agent prompt instead.
+1. **Spawn one slice subagent** using this plugin's **`ultrapowers:slice-worker`** agent type — its definition carries the full slice protocol. Spawn it **synchronously** (`run_in_background: false`), named `slice-N`. The spawn prompt (template below) is the COMPLETE assignment — never follow up with a SendMessage repeating the task; SendMessage is only for delivering `needs_input` answers. If the agent type is unavailable, read `agents/slice-worker.md` in this plugin and inline its body into a default-agent prompt instead.
 2. **Get its STATUS — message first, disk as truth.** The FIRST line of its final message should be `STATUS: <token>`. If the worker went idle silently, died, or returned no valid token, read `docs/slides/<slug>/status/slice-N.md` — workers write it before finishing and **disk is authoritative**. Send at most ONE nudge message; never a nagging loop.
    - **Normalize off-list tokens:** anything like "complete", "DONE", "finished", "implemented" means THIS SLICE finished — treat it as `more` unless you can verify the Definition of Done itself is met. Never finalize the task on a slice-level "done" claim alone.
    - **Trust the `VERIFIED:` evidence line** (commands + exit codes) — do not re-run builds or tests a worker already ran green. Stale IDE/language-server diagnostics (e.g. SourceKit) are not failures; exit codes are.
@@ -73,7 +77,7 @@ The orchestrator holds nothing that isn't already on disk, so refreshing is safe
 
 Then end your turn. **If the user replies "continue" in-session instead: do NOT silently comply.** Explain in one line that continuing hot forfeits the context refresh and degrades quality, then offer: (a) continue via a fresh continuation leg (recommended — same mechanism as unattended mode), (b) stop for a true `/clear` restart, (c) continue in-session anyway — their call, on the record.
 
-**Unattended mode:** don't end the turn. Spawn ONE **continuation leg**: a `general-purpose` subagent, synchronous, `mode: "acceptEdits"`, named `leg-K`, prompted:
+**Unattended mode:** don't end the turn. Spawn ONE **continuation leg**: a `general-purpose` subagent, synchronous, named `leg-K`, prompted:
 
 > Invoke the `ultrapowers:autopilot` skill (via the Skill tool; if unavailable, read this plugin's `skills/autopilot/SKILL.md` and follow it) for task `<slug>` with max=`<checkpointEvery>`, default mode, and act as its orchestrator with two overrides: (1) never checkpoint-continue or spawn continuation legs yourself — your `max` IS your session budget; when you hit it or a checkpoint would fire, wrap up and return; (2) you cannot reach the user, so on `needs_input`, `blocked`, or any user decision, end immediately and return `STATUS: <state>` plus the question/details as your final message. Return a terse summary: slices completed, final state, next slice title.
 

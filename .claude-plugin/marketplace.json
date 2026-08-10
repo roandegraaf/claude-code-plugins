@@ -126,7 +126,7 @@
         {
             "name": "ultrapowers",
             "description": "Tackle large tasks as a series of one-session 'slices': brainstorm a high-level overview, then implement -> handoff -> complete in fresh sessions so output quality never degrades. Slices may fan out parallel subagents for independent chunks. Run autonomously with /autopilot, in parallel waves of independent slices with /ultrapilot, or sketch ideas mid-brainstorm with /visualize. Small tasks are built inline.",
-            "version": "1.3.0",
+            "version": "1.5.0",
             "source": "./ultrapowers",
             "category": "productivity",
             "strict": false
