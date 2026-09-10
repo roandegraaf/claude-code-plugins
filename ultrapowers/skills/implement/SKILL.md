@@ -50,6 +50,7 @@ A slice doesn't have to be built serially. When the work splits into genuinely i
 - Spawn them in **one message** so they run in parallel, each with an explicit, **non-overlapping file scope** and the relevant context from OVERVIEW/NEXT_SLIDE pasted into its prompt (subagents don't see your conversation).
 - **Never let two agents touch the same file.** Keep coupled work — shared types, wiring, integration — in this session.
 - You own the result: after the agents return, integrate the pieces and run verification yourself. Relay what they did; don't trust "done" claims blindly.
+- On a Fable session, pass `model: "opus"` on builder chunk agents — the same split `/autopilot` uses: the strongest model integrates and verifies, Opus builds. `Explore` scouts need nothing; they cap at Opus on their own.
 - Only split when the seam is obvious. A slice that's really one coupled change is faster (and safer) done directly. This also spends more tokens — worth it for speed on wide slices, waste on narrow ones.
 - For a very wide, repetitive fan-out (the same mechanical change or audit across dozens of files), a dynamic **workflow** (Workflow tool) is the stronger fit — but it spawns many agents and needs the user's explicit opt-in, so propose it and let the user decide; never launch one unprompted.
 

@@ -1,6 +1,7 @@
 ---
 name: autopilot
 description: Run the slice workflow autonomously — implement every remaining slice back-to-back without manual /clear and /implement between them. Use when the user says "/autopilot", "run the task autonomously", "auto-run the slices", or wants a task driven to completion unattended. Takes a task slug, optional max-iterations/checkpoint interval, and an optional mode — "review" pauses after every slice for approval, "unattended" refreshes context automatically at checkpoints and runs to the Definition of Done. Pauses ONLY to ask the user a question; otherwise runs to the Definition of Done. The manual /implement → /handoff loop still works unchanged.
+argument-hint: "[task-slug] [max] [checkpointEvery] [review|unattended]"
 ---
 
 # Autopilot — Autonomous Slice Loop
@@ -17,7 +18,7 @@ Because each slice runs in a subagent, the orchestrator only accumulates terse s
 
 - **default** — run slices back-to-back; a checkpoint ends the session and the user re-runs after `/clear`.
 - **`review`** — the middle ground between fully autonomous and the manual loop: after every slice's handoff, present a two-line summary plus `git diff --stat`, then **AskUserQuestion**: continue / adjust course (fold their note into `NEXT_SLIDE.md` before the next spawn) / stop. Checkpoints still apply.
-- **`unattended`** — never end the turn at a checkpoint; refresh context via **continuation legs** (see Checkpoint) and run to the Definition of Done, the cap, or a real block. Before starting, remind the user that on a laptop the machine sleeping kills an overnight run — suggest `caffeinate -dims` (macOS) in another terminal, or a cloud session.
+- **`unattended`** — never hand a checkpoint back to the user; refresh context via **continuation legs** (see Checkpoint) and run to the Definition of Done, the cap, or a real block. Before starting, remind the user that on a laptop the machine sleeping kills an overnight run — suggest `caffeinate -dims` (macOS) in another terminal, or a cloud session.
 
 ## Precondition — permission mode & git safety
 
@@ -26,6 +27,10 @@ Subagents **inherit this session's permission mode**; you cannot set it per spaw
 Two follow-ons, one line each, only when they apply:
 - **Git.** Under auto mode the classifier will approve commits and pushes to this repo — but nothing in this workflow ever commits, pushes, or deploys on its own. Before an unattended run, offer the hard guarantee: `"permissions": {"deny": ["Bash(git commit:*)", "Bash(git push:*)"]}` in `.claude/settings.local.json`. A boundary stated only in conversation is the soft version — compaction can drop it. Say in the same breath that those rules persist, so they should come back out when the run ends — otherwise `/complete`'s own commit suggestion is blocked too.
 - **Shell commands.** Check the project allowlist (`.claude/settings.json` / `.claude/settings.local.json`): if the test/build commands are covered, say nothing. If not, warn once and point at `/fewer-permission-prompts` — auto mode falls back to prompting after 3 consecutive (or 20 total) classifier blocks, which is how an overnight run actually dies.
+
+## Models — orchestrate on the strongest model, build on Opus
+
+`slice-worker` and `wave-planner` declare `model: opus` in their frontmatter, so builders and planners always run on Opus whatever the session model is. Everything that judges their work inherits the session model instead: you, the continuation legs, `/complete`'s reviewer, and `/ultrapilot`'s integration-gate verifier. Run the session on Fable and you get Fable orchestrating and verifying while Opus builds — the intended split. Don't pass `model:` on spawns; the frontmatter already does it, and `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` is the user's override if they want everything on one model.
 
 ## Resolve which task
 
@@ -43,8 +48,8 @@ Autopilot can be launched at any point, including in the middle of a manual sess
 
 Track `progressCount` = number of `## Slice:` entries in `docs/slides/<task-slug>/PROGRESS.md` (0 if absent). Then repeat up to `max` times:
 
-1. **Spawn one slice subagent** using this plugin's **`ultrapowers:slice-worker`** agent type — its definition carries the full slice protocol. Spawn it **synchronously** (`run_in_background: false`), named `slice-N`. The spawn prompt (template below) is the COMPLETE assignment — never follow up with a SendMessage repeating the task; SendMessage is only for delivering `needs_input` answers. If the agent type is unavailable, read `agents/slice-worker.md` in this plugin and inline its body into a default-agent prompt instead.
-2. **Get its STATUS — message first, disk as truth.** The FIRST line of its final message should be `STATUS: <token>`. If the worker went idle silently, died, or returned no valid token, read `docs/slides/<slug>/status/slice-N.md` — workers write it before finishing and **disk is authoritative**. Send at most ONE nudge message; never a nagging loop.
+1. **Spawn one slice subagent** using this plugin's **`ultrapowers:slice-worker`** agent type — its definition carries the full slice protocol. Name it `slice-N`, one at a time — this loop is serial by design. There is no foreground flag: in an interactive session the harness runs every subagent in the background, so after spawning, **end your turn and wait for the completion notification**. Never poll, and never predict or narrate a result you haven't received. The spawn prompt (template below) is the COMPLETE assignment — never follow up with a SendMessage repeating the task; SendMessage is only for delivering `needs_input` answers. If the agent type is unavailable, read `agents/slice-worker.md` in this plugin and inline its body into a default-agent prompt instead.
+2. **Get its STATUS — message first, disk as truth.** The FIRST line of its final message should be `STATUS: <token>`. If the notification reports a failure (API error, cut off mid-response, turn cap — a `maxTurns` stop arrives as partial output) or the message has no valid token, read `docs/slides/<slug>/status/slice-N.md` — workers write it before finishing and **disk is authoritative**. Send at most ONE nudge (SendMessage resumes the same agent); never a nagging loop.
    - **Normalize off-list tokens:** anything like "complete", "DONE", "finished", "implemented" means THIS SLICE finished — treat it as `more` unless you can verify the Definition of Done itself is met. Never finalize the task on a slice-level "done" claim alone.
    - **Trust the `VERIFIED:` evidence line** (commands + exit codes) — do not re-run builds or tests a worker already ran green. Stale IDE/language-server diagnostics (e.g. SourceKit) are not failures; exit codes are.
 3. **Branch:**
@@ -53,11 +58,13 @@ Track `progressCount` = number of `## Slice:` entries in `docs/slides/<task-slug
    - `deferred` — the slice hit a step automation can't finish (paid run, credentials, hardware, external approval). Record what the worker reported, tell the user in the one-liner, and continue if independent work remains. When nothing remains except deferred/user-gated items, the automation is done → **Finalize** (the acceptance checklist picks these up).
    - `needs_input` — take its question + options, ask the user via **AskUserQuestion**, then **continue the SAME subagent via `SendMessage`** with the answer. Only if it can't be continued, re-spawn with the answer appended. Doesn't count toward the non-progress check.
    - `blocked` — verification failed and its one retry didn't fix it. **Stop the loop**, report the details, ask the user how to proceed. **Never commit, push, deploy, or destroy autonomously** — version control belongs to the user.
-   - Worker died (API/connection error, `failed` idle, crash, turn cap) with no STATUS on disk either — first check `status/slice-N.md` and `git status`: if the slice actually finished, count it and move on; don't redo shipped work. Otherwise **re-spawn once** (`slice-N-retry`) — state is on disk, a retry is safe. If the retry also fails, treat as `blocked`.
+   - Worker failed (the notification names an API error, a cut-off, or the turn cap) with no STATUS on disk either — first check `status/slice-N.md` and `git status`: if the slice actually finished, count it and move on; don't redo shipped work. Otherwise **re-spawn once** (`slice-N-retry`) — state is on disk, a retry is safe. If the retry also fails, treat as `blocked`.
 4. **Non-progress guard:** after a `more`, re-count `## Slice:` entries. If the count did **not** increase (or the same slice title repeats), the handoff is spinning — **stop and ask the user**; don't keep looping.
 5. **Between slices, stream a one-liner** so the user can watch: `Slice N done: <title> → next: <next title>` (include any deferred/placeholder flags the worker raised).
 6. **Honor runtime pause requests.** If the user says "pause" or "pause after slice N" mid-run, finish the in-flight slice through its handoff, then stop cleanly with resume instructions. Never abandon a slice mid-flight, and never ignore a pause.
 7. **Context checkpoint (after each `more`):** trigger when **either** your context reaches **~30% used** (deliberately early — orchestrator quality degrades past that; do NOT wait for the harness's context-low or auto-compact warnings, which fire far too late), **or** you've completed `checkpointEvery` slices this session. Go to **Checkpoint**.
+
+**Only four things end a turn mid-run:** waiting on a spawned worker's notification, a checkpoint, a question for the user, or `done`. Never end a turn on a stated intention ("I'll spawn slice 4 next") — spawn it.
 
 **Single-writer rule:** while the loop runs, the worker owns `PROGRESS.md` and `NEXT_SLIDE.md`. Never write them yourself between a spawn and its STATUS — concurrent handoff writes corrupt them (duplicate `## Slice:` sections are the telltale symptom).
 
@@ -77,11 +84,11 @@ The orchestrator holds nothing that isn't already on disk, so refreshing is safe
 
 Then end your turn. **If the user replies "continue" in-session instead: do NOT silently comply.** Explain in one line that continuing hot forfeits the context refresh and degrades quality, then offer: (a) continue via a fresh continuation leg (recommended — same mechanism as unattended mode), (b) stop for a true `/clear` restart, (c) continue in-session anyway — their call, on the record.
 
-**Unattended mode:** don't end the turn. Spawn ONE **continuation leg**: a `general-purpose` subagent, synchronous, named `leg-K`, prompted:
+**Unattended mode:** don't hand the checkpoint back to the user. Spawn ONE **continuation leg**: a `general-purpose` subagent named `leg-K` — no `model:`, it inherits yours and orchestrates on it — then end your turn and wait for its notification. Prompt:
 
 > Invoke the `ultrapowers:autopilot` skill (via the Skill tool; if unavailable, read this plugin's `skills/autopilot/SKILL.md` and follow it) for task `<slug>` with max=`<checkpointEvery>`, default mode, and act as its orchestrator with two overrides: (1) never checkpoint-continue or spawn continuation legs yourself — your `max` IS your session budget; when you hit it or a checkpoint would fire, wrap up and return; (2) you cannot reach the user, so on `needs_input`, `blocked`, or any user decision, end immediately and return `STATUS: <state>` plus the question/details as your final message. Return a terse summary: slices completed, final state, next slice title.
 
-Branch on the leg's return: `done` → **Finalize**; hit its budget → spawn the next leg (total slices across all legs stay bounded by `max`, tracked via `progressCount`); `needs_input` → ask the user, then start a fresh leg with the answer appended to its prompt; `blocked` → stop and report. Each leg is a fresh context and returns only a summary, so your own context stays thin — this honors the 30% rule without a human at the boundary.
+Branch on the leg's return: `done` → **Finalize**; hit its budget → spawn the next leg (total slices across all legs stay bounded by `max`, tracked via `progressCount`); `needs_input` → ask the user, then start a fresh leg with the answer appended to its prompt; `blocked` → stop and report. Each leg is a fresh context and returns only a summary, so your own context stays thin — this honors the 30% rule without a human at the boundary. A leg's workers sit one nesting level deeper than yours (default limit 3, `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`); they can still fan out scouts, and scouts never spawn anyway.
 
 **Teardown (every stop, pause, or checkpoint):** make sure no spawned agents are left running — stop leftovers with TaskStop. Orphaned workers otherwise linger for hours and have to be reaped by hand in later sessions.
 
