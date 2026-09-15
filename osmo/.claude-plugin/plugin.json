@@ -1,0 +1,21 @@
+{
+  "name": "osmo",
+  "version": "1.0.0",
+  "description": "Discover and use Osmo Supply (osmo.supply) resources: buttons, menus, sliders, scroll and text animations, page transitions, loaders, effects and snippets. Syncs the Vault to a local markdown library with a searchable index so the agent can pick a fitting resource and integrate its HTML/CSS/JS.",
+  "author": {
+    "name": "Roan de Graaf",
+    "email": "info@roandegraaf.nl"
+  },
+  "homepage": "https://github.com/roandegraaf/claude-code-plugins",
+  "keywords": [
+    "osmo",
+    "animation",
+    "gsap",
+    "webflow",
+    "components",
+    "ui",
+    "frontend",
+    "effects"
+  ],
+  "license": "MIT"
+}

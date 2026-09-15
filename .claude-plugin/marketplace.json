@@ -6,7 +6,7 @@
     },
     "metadata": {
         "description": "Roan's Claude Code plugins - agents and skills for development",
-        "version": "2.1.0"
+        "version": "2.2.0"
     },
     "plugins": [
         {
@@ -129,6 +129,14 @@
             "version": "1.6.0",
             "source": "./ultrapowers",
             "category": "productivity",
+            "strict": false
+        },
+        {
+            "name": "osmo",
+            "description": "Discover and integrate Osmo Supply (osmo.supply) resources: buttons, menus, sliders, scroll/text/hover animations, loaders, page transitions, effects and snippets. Syncs the Vault into a local, searchable markdown library the agent picks from.",
+            "version": "1.0.0",
+            "source": "./osmo",
+            "category": "development",
             "strict": false
         }
     ]

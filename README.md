@@ -230,6 +230,26 @@ Run `/brainstorm add a billing dashboard` to scope it, then `/implement` → `/h
 
 ---
 
+### :sparkles: Osmo
+
+Let the agent discover and integrate [Osmo Supply](https://www.osmo.supply) resources — buttons, navigation menus, sliders and marquees, scroll/text/hover animations, cursors, loaders, page transitions, galleries, effects and CSS/JS snippets. The Vault is synced into a local markdown library (`~/.osmo/library`, one file per resource plus a searchable `INDEX.md`) containing the same content as Osmo's "Copy context for AI" button, so the agent can grep for a fitting resource and wire in its HTML/CSS/JS.
+
+Requires an Osmo membership. The library stays on your machine and is never committed.
+
+**Install:**
+```bash
+/plugin install osmo@roans-cc-plugins
+```
+
+**Commands:**
+- **`/osmo sync`** — Build or refresh the local library (~2 minutes, ~360 resources). Pass slugs to refresh only those
+- **`/osmo <what you need>`** — Search the index, shortlist candidates, read the best match and integrate it following Osmo's rules (keep `data-` attributes, keep the animation approach, load the listed external scripts)
+
+**Usage:**
+Run `/osmo sync` once, then `/osmo I need an infinite logo marquee for the hero` or just build a frontend piece — the skill triggers on its own when an Osmo resource would fit.
+
+---
+
 ## Usage
 
 ### Agents (python-simplifier, flutter-simplifier, swift-simplifier, php-wordpress-simplifier, laravel-simplifier)
@@ -334,6 +354,13 @@ claude-code-plugins/
 │       ├── autopilot/SKILL.md    # /autopilot [slug]
 │       ├── ultrapilot/SKILL.md   # /ultrapilot [slug]
 │       └── visualize/SKILL.md    # /visualize <idea>
+├── osmo/
+│   ├── .claude-plugin/
+│   │   └── plugin.json           # Plugin metadata
+│   ├── scripts/
+│   │   └── sync.py               # Syncs the Vault to ~/.osmo/library (stdlib only)
+│   └── skills/
+│       └── osmo/SKILL.md         # /osmo [sync|<what you need>]
 ├── README.md
 └── LICENSE
 ```
