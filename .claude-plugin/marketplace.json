@@ -6,7 +6,7 @@
     },
     "metadata": {
         "description": "Roan's Claude Code plugins - agents and skills for development",
-        "version": "2.2.0"
+        "version": "2.3.0"
     },
     "plugins": [
         {
@@ -136,6 +136,14 @@
             "description": "Discover and integrate Osmo Supply (osmo.supply) resources: buttons, menus, sliders, scroll/text/hover animations, loaders, page transitions, effects and snippets. Syncs the Vault into a local, searchable markdown library the agent picks from.",
             "version": "1.0.0",
             "source": "./osmo",
+            "category": "development",
+            "strict": false
+        },
+        {
+            "name": "dezzign",
+            "description": "Redesign a client's existing website the ZekerZichtbaar way: crawl the old site, build the full sitemap, pick fitting Osmo resources, design every page on a Claude Design canvas and export to Figma. Encodes the recurring house 'stramien' and its style directions.",
+            "version": "0.1.0",
+            "source": "./dezzign",
             "category": "development",
             "strict": false
         }

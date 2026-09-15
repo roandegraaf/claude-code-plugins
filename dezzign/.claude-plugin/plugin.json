@@ -1,0 +1,21 @@
+{
+  "name": "dezzign",
+  "version": "0.1.0",
+  "description": "Redesign a client's existing website the ZekerZichtbaar way: crawl the old site, build the full sitemap, pick fitting Osmo resources and produce every page as a Claude Design canvas, then push it to Figma. Encodes the recurring 'stramien' - page skeleton, section patterns and style directions - distilled from the sites we build.",
+  "author": {
+    "name": "Roan de Graaf",
+    "email": "info@roandegraaf.nl"
+  },
+  "homepage": "https://github.com/roandegraaf/claude-code-plugins",
+  "keywords": [
+    "design",
+    "redesign",
+    "figma",
+    "webdesign",
+    "sitemap",
+    "osmo",
+    "design-system",
+    "ui"
+  ],
+  "license": "MIT"
+}

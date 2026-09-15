@@ -250,6 +250,26 @@ Run `/osmo sync` once, then `/osmo I need an infinite logo marquee for the hero`
 
 ---
 
+### :triangular_ruler: Dezzign
+
+Redesign a client's existing website the ZekerZichtbaar way. `/dezzign <url>` crawls the old site with the Chrome DevTools MCP, builds the **complete** sitemap of the new one, asks what to keep and which style direction to use, picks fitting Osmo resources for the hero, nav, marquee, hover and transitions, then designs every page on a Claude Design canvas and pushes it to Figma. The house "stramien" — page skeleton, 60-odd section patterns and 5 named style directions, distilled from 11 sites we built — ships as reference material the skill reads one section at a time.
+
+Requires an Osmo membership with a synced library, the Chrome DevTools MCP, the remote `figma` MCP authenticated, and the built-in `design` skill available in the session.
+
+**Install:**
+```bash
+/plugin install dezzign@roans-cc-plugins
+```
+
+**Commands:**
+- **`/dezzign <url>`** — Crawl, sitemap, batched questions, Osmo picks, Claude Design canvas, Figma export. One artboard per fully designed page, wireframe outlines for the self-explanatory ones
+- **`/dezzign learn <url>`** — Fingerprint a newly built site into the reference set under the fixed measurement protocol, then *propose* stramien and style-direction updates instead of applying them
+
+**Usage:**
+Run `/dezzign https://oude-site-van-de-klant.nl` and answer the three questions it batches; after a new site goes live, `/dezzign learn <url>` keeps the stramien current.
+
+---
+
 ## Usage
 
 ### Agents (python-simplifier, flutter-simplifier, swift-simplifier, php-wordpress-simplifier, laravel-simplifier)
@@ -361,6 +381,16 @@ claude-code-plugins/
 │   │   └── sync.py               # Syncs the Vault to ~/.osmo/library (stdlib only)
 │   └── skills/
 │       └── osmo/SKILL.md         # /osmo [sync|<what you need>]
+├── dezzign/
+│   ├── .claude-plugin/
+│   │   └── plugin.json           # Plugin metadata
+│   └── skills/
+│       └── dezzign/
+│           ├── SKILL.md          # /dezzign <url> | /dezzign learn <url>
+│           └── references/       # The ZekerZichtbaar stramien
+│               ├── stramien.md   # Page skeleton and section patterns, one heading per slot
+│               ├── styles/       # 5 named style directions
+│               └── sites/        # _TEMPLATE.md + 11 site fingerprints
 ├── README.md
 └── LICENSE
 ```
