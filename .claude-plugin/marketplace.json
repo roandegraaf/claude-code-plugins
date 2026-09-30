@@ -133,8 +133,8 @@
         },
         {
             "name": "osmo",
-            "description": "Discover and integrate Osmo Supply (osmo.supply) resources: buttons, menus, sliders, scroll/text/hover animations, loaders, page transitions, effects and snippets. Syncs the Vault into a local, searchable markdown library the agent picks from.",
-            "version": "1.0.0",
+            "description": "Discover and integrate Osmo Supply (osmo.supply) and Made With GSAP (madewithgsap.com) resources: buttons, menus, sliders, scroll/text/hover animations, loaders, page transitions, effects and snippets. Syncs both into a local, searchable markdown library the agent picks from.",
+            "version": "1.1.0",
             "source": "./osmo",
             "category": "development",
             "strict": false

@@ -234,7 +234,9 @@ Run `/brainstorm add a billing dashboard` to scope it, then `/implement` → `/h
 
 Let the agent discover and integrate [Osmo Supply](https://www.osmo.supply) resources — buttons, navigation menus, sliders and marquees, scroll/text/hover animations, cursors, loaders, page transitions, galleries, effects and CSS/JS snippets. The Vault is synced into a local markdown library (`~/.osmo/library`, one file per resource plus a searchable `INDEX.md`) containing the same content as Osmo's "Copy context for AI" button, so the agent can grep for a fitting resource and wire in its HTML/CSS/JS.
 
-Requires an Osmo membership. The library stays on your machine and is never committed.
+[Made With GSAP](https://madewithgsap.com) effects are synced into the same library (`mwg/` plus `INDEX-mwg.md`): each effect's final HTML/CSS/JS, its GSAP plugin dependencies and the full step-by-step tutorial. The sync logs in with `MWG_EMAIL` and `MWG_PASSWORD` from your shell environment; effects your membership doesn't include are skipped as locked.
+
+Requires an Osmo membership (and a Made With GSAP membership for the MWG effects). The library stays on your machine and is never committed.
 
 **Install:**
 ```bash
@@ -242,7 +244,7 @@ Requires an Osmo membership. The library stays on your machine and is never comm
 ```
 
 **Commands:**
-- **`/osmo sync`** — Build or refresh the local library (~2 minutes, ~360 resources). Pass slugs to refresh only those
+- **`/osmo sync`** — Build or refresh the local library (~2 minutes, ~360 Osmo resources plus the Made With GSAP effects). Pass slugs to refresh only those
 - **`/osmo <what you need>`** — Search the index, shortlist candidates, read the best match and integrate it following Osmo's rules (keep `data-` attributes, keep the animation approach, load the listed external scripts)
 
 **Usage:**
@@ -378,7 +380,8 @@ claude-code-plugins/
 │   ├── .claude-plugin/
 │   │   └── plugin.json           # Plugin metadata
 │   ├── scripts/
-│   │   └── sync.py               # Syncs the Vault to ~/.osmo/library (stdlib only)
+│   │   ├── sync.py               # Syncs the Vault to ~/.osmo/library (stdlib only)
+│   │   └── sync_mwg.py           # Syncs Made With GSAP effects into ~/.osmo/library/mwg
 │   └── skills/
 │       └── osmo/SKILL.md         # /osmo [sync|<what you need>]
 ├── dezzign/
