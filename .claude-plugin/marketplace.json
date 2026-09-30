@@ -141,8 +141,8 @@
         },
         {
             "name": "dezzign",
-            "description": "Redesign a client's existing website the ZekerZichtbaar way: crawl the old site, build the full sitemap, pick fitting Osmo resources, design every page on a Claude Design canvas and export to Figma. Encodes the recurring house 'stramien' and its style directions.",
-            "version": "0.1.0",
+            "description": "Redesign a client's existing website the ZekerZichtbaar way: crawl the old site, build the full sitemap, pick fitting Osmo and Made With GSAP resources, design every page on a Claude Design canvas and export to Figma. Encodes the recurring house 'stramien', its style directions and a Mobbin-sourced variant library.",
+            "version": "0.2.0",
             "source": "./dezzign",
             "category": "development",
             "strict": false

@@ -32,7 +32,13 @@ grep '^#' "${CLAUDE_PLUGIN_ROOT}/skills/dezzign/references/stramien.md"
 awk -v h='### The four hero types' 'BEGIN{n=match(h,/[^#]/)-1} index($0,h)==1{f=1;print;next} f&&/^#+ /{if(match($0,/[^#]/)-1<=n) exit} f' "${CLAUDE_PLUGIN_ROOT}/skills/dezzign/references/stramien.md"
 ```
 
-**The quoted heading is the only thing you change.** Copy the command whole each time — do not turn
+For the variant library (see the table below), the same command takes one more change, the file:
+
+```bash
+awk -v h='### The stat stack on a hairline spine' 'BEGIN{n=match(h,/[^#]/)-1} index($0,h)==1{f=1;print;next} f&&/^#+ /{if(match($0,/[^#]/)-1<=n) exit} f' "${CLAUDE_PLUGIN_ROOT}/skills/dezzign/references/library/proof.md"
+```
+
+**Change only the quoted heading, and for a library pull the file name.** Copy the command whole each time — do not turn
 it into a shell function, because shell state does not survive between tool calls and the next call
 would fail with `command not found`. Use `${CLAUDE_PLUGIN_ROOT}`, never a relative path: when
 `/dezzign` runs, the working directory is the client's repo, not this plugin.
@@ -40,7 +46,8 @@ would fail with `command not found`. Use `${CLAUDE_PLUGIN_ROOT}`, never a relati
 A `###` heading pulls one pattern (`### No elevation`, 16 lines). A `##` heading pulls the whole
 topic and every pattern under it (`## Hero`, 112 lines).
 
-Below, **pull** `### Something` means exactly this command with that heading.
+Below, **pull** `### Something` means the stramien command with that heading, and
+**pull** `### Something` **from `library/x.md`** means the library command pointed at that file.
 
 Which file answers which question:
 
@@ -50,6 +57,21 @@ Which file answers which question:
 | `stramien.md` | **by section**, with the command above | what a slot is, when to reach for it, which sites prove it |
 | `sites/<slug>.md` | only when a pattern needs a worked example | how one site actually resolved that slot |
 | `sites/_TEMPLATE.md` | in full, **`learn` branch only** | the measurement protocol and the 12 fixed headings |
+| `library/<slot>.md` | **by pattern**, with the library command | the variant pool per slot: outside patterns (swept from Mobbin) already translated into house rules |
+| `library/motion.md` | **by slot or direction**, with the library command | which Made With GSAP and Osmo effects fit each slot and direction |
+
+The library files are `hero`, `proof`, `services`, `showcase`, `statement-cta`, `nav-footer`,
+`inner-pages` and `motion`. List a file's patterns with the fit line alongside, so you can
+shortlist without reading bodies:
+
+```bash
+grep -E '^### |^\*\*Fits' "${CLAUDE_PLUGIN_ROOT}/skills/dezzign/references/library/hero.md"
+```
+
+**The stramien is evidence, the library is inspiration.** A stramien pattern is proven on two of
+our own builds. A library pattern is proven on two outside sites and translated to our rules. When
+the two conflict, the stramien wins. The library never overrides `### No elevation` or
+`### The accent is punctuation, never a field`.
 
 Two sections are worth reading before you measure or judge anything: pull `## Known traps` (shadow
 tallies lie, colour tallies lie, buttons can compute transparent, the dead shadcn block,
@@ -128,6 +150,13 @@ Slot to category, distilled from the 11 fingerprints so you do not have to open 
 Only pick where the direction actually calls for it. pull `### Page transitions — a genuine split`
 before you add one; seven of eleven sites have none.
 
+**Made With GSAP** effects sit in the local osmo library (`mwg/effectNNN.md`, searched by the osmo
+skill). They are the more expressive layer: scroll-told type, card stacks, 3D and infinite
+galleries, mouse-reactive image sets. Before picking one, pull the direction's heading from
+`library/motion.md` (e.g. `### warm-daylight`) and the slot's heading. It lists what fits, what
+never fits, and the one-pinned-effect-per-page budget. MWG picks are cited with their `preview`
+URL, the same as Osmo picks.
+
 ### 5. Produce the design — the `design` skill
 
 Invoke the built-in **`design`** skill (Claude Design canvas). Artboards:
@@ -143,6 +172,28 @@ Work slot by slot, pulling the stramien section for each: pull `## Page skeleton
 pull `### The four hero types`, pull `### Headline scale`, pull `### Vertical beat`,
 pull `### Radius ladder`, pull `### The pre-footer CTA band`. The direction doc you read in
 step 3 says which branch each one takes.
+
+**Compose before you style: the spine is the fallback, not the answer.** Every site from the
+default order plus the four hero types looks like the last one. Before you draw an artboard, write
+a composition line for each fully designed page:
+
+1. **One signature moment per page.** A library pattern or an MWG/Osmo effect this page is
+   remembered by: a pinned card stack of services, a hover-image project index, a scroll-told
+   manifesto. Pick it from what the client actually has. Strong photography earns a gallery moment,
+   a sharp claim earns a type moment, and a real process earns a sequence.
+2. **At least three slots filled from `library/`** instead of the stramien default: a different
+   hero, a different proof strip, a different showcase, a different footer. Shortlist with the
+   `grep -E '^### |^\*\*Fits'` command and read the `Breaks` reason against the chosen direction.
+   Some are conditional ("only if..."), so drop only what the reason actually rules out. Then pull
+   the pick from its `library/<slot>.md` file.
+3. **Vary the rhythm, not only the parts.** Change at least one of: section order within
+   orient-explain-prove-ask, the ground sequence (pull `### Background rhythm is a designed
+   decision`), or the column count of the showcase.
+4. **Hold the budget.** At most one pinned or scroll-hijacking effect per page, and none on pages
+   that are mainly for reading. The restraint rules are under `## Restraint rules` in `motion.md`.
+
+Inner pages get the same treatment from `library/inner-pages.md`. A case page and a vacancy page
+should not share one template.
 
 **Four rules to hold while generating, because these are the ones that get violated by default:**
 
@@ -168,7 +219,8 @@ Remote **`figma`** MCP server, not `figma-desktop`. Use the server's own
 **`/figma-generate-design`** skill, which drives `generate_figma_design` — calling the tool bare
 skips its required setup. Hand it the finished canvas artboards.
 
-Finish by listing: the sitemap, which pages got a full design, which got an outline, every Osmo
+Finish by listing: the sitemap, which pages got a full design, which got an outline, each page's
+composition line (signature moment plus the library patterns used, by heading), every Osmo and MWG
 pick with its preview URL, and the Figma file URL.
 
 ---
@@ -215,5 +267,8 @@ Present every change as a diff-shaped proposal and get an explicit yes before wr
 - **A direction added, renamed or removed moves three things together:** the `## Style directions`
   index at the end of `stramien.md`, the cross-links in the five direction docs, and the file
   itself. Propose all three in one go or the index goes stale.
+- **Library patterns graduate through built sites.** If the new site shipped a `library/` pattern
+  and an earlier fingerprint shows it too, propose moving it into `stramien.md`. It has now been
+  proven on two of our own builds. Remove it from the library in the same proposal.
 - **Never edit an existing fingerprint** to make it agree with the new one. The eleven are evidence.
   If one looks wrong, say so in the proposal and leave it alone.

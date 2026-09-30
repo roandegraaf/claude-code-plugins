@@ -1,7 +1,7 @@
 {
   "name": "dezzign",
-  "version": "0.1.0",
-  "description": "Redesign a client's existing website the ZekerZichtbaar way: crawl the old site, build the full sitemap, pick fitting Osmo resources and produce every page as a Claude Design canvas, then push it to Figma. Encodes the recurring 'stramien' - page skeleton, section patterns and style directions - distilled from the sites we build.",
+  "version": "0.2.0",
+  "description": "Redesign a client's existing website the ZekerZichtbaar way: crawl the old site, build the full sitemap, pick fitting Osmo and Made With GSAP resources and produce every page as a Claude Design canvas, then push it to Figma. Encodes the recurring 'stramien' - page skeleton, section patterns and style directions - distilled from the sites we build, plus a variant library of outside patterns swept from Mobbin so runs do not converge on one layout.",
   "author": {
     "name": "Roan de Graaf",
     "email": "info@roandegraaf.nl"

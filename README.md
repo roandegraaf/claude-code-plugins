@@ -254,7 +254,7 @@ Run `/osmo sync` once, then `/osmo I need an infinite logo marquee for the hero`
 
 ### :triangular_ruler: Dezzign
 
-Redesign a client's existing website the ZekerZichtbaar way. `/dezzign <url>` crawls the old site with the Chrome DevTools MCP, builds the **complete** sitemap of the new one, asks what to keep and which style direction to use, picks fitting Osmo resources for the hero, nav, marquee, hover and transitions, then designs every page on a Claude Design canvas and pushes it to Figma. The house "stramien" — page skeleton, 60-odd section patterns and 5 named style directions, distilled from 11 sites we built — ships as reference material the skill reads one section at a time.
+Redesign a client's existing website the ZekerZichtbaar way. `/dezzign <url>` crawls the old site with the Chrome DevTools MCP, builds the **complete** sitemap of the new one, asks what to keep and which style direction to use, picks fitting Osmo resources for the hero, nav, marquee, hover and transitions, then designs every page on a Claude Design canvas and pushes it to Figma. The house "stramien" — page skeleton, 60-odd section patterns and 5 named style directions, distilled from 11 sites we built — ships as reference material the skill reads one section at a time. A variant library of outside section patterns (swept from Mobbin, translated to house rules, written out in full so no Mobbin account is needed to use it; the source links do need one) plus a motion map of Made With GSAP and Osmo effects makes every page pick a signature moment and at least three non-default sections, so redesigns stop looking alike.
 
 Requires an Osmo membership with a synced library, the Chrome DevTools MCP, the remote `figma` MCP authenticated, and the built-in `design` skill available in the session.
 
@@ -393,7 +393,8 @@ claude-code-plugins/
 │           └── references/       # The ZekerZichtbaar stramien
 │               ├── stramien.md   # Page skeleton and section patterns, one heading per slot
 │               ├── styles/       # 5 named style directions
-│               └── sites/        # _TEMPLATE.md + 11 site fingerprints
+│               ├── sites/        # _TEMPLATE.md + 11 site fingerprints
+│               └── library/      # Mobbin-sourced variant patterns per slot + motion.md (MWG/Osmo map)
 ├── README.md
 └── LICENSE
 ```
