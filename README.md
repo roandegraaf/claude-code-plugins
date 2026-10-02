@@ -298,20 +298,6 @@ A mod that keeps unused MCP servers, skills and agents out of a project's contex
 
 ---
 
-### :speech_balloon: Aside
-
-A mod for side questions. `/aside why did slice 4 take so long?` opens a pane and answers from a fork of the current transcript, so the main conversation never sees the answer. Questions typed in the pane's input stay out of the transcript entirely; the `/aside <question>` command line itself may be recorded like any slash command, so type sensitive or distracting questions in the pane. It works while Claude is busy, which makes it the way to ask what an `/autopilot` run is doing without touching the orchestrator's context. Follow-ups go in the pane's input field. Requires Claude Code ≥ 2.1.287 (tested on 2.1.287) and the terminal or the Desktop app.
-
-**Install:**
-```bash
-/plugin install aside@roans-cc-plugins
-```
-
-**Commands:**
-- **`/aside [question]`** — Open the aside pane, optionally asking right away. Esc closes it
-
----
-
 ## Usage
 
 ### Agents (python-simplifier, flutter-simplifier, swift-simplifier, php-wordpress-simplifier, laravel-simplifier)
@@ -443,10 +429,6 @@ claude-code-plugins/
 │   ├── .claude-plugin/plugin.json
 │   ├── hooks/                    # hooks.json + register.js: the attachment filter mod
 │   └── tests/diet.test.ts        # claude plugin test
-├── aside/
-│   ├── .claude-plugin/plugin.json
-│   ├── hooks/                    # hooks.json + register.js: /aside pane over $.model.fork
-│   └── tests/aside.test.ts       # claude plugin test
 ├── README.md
 └── LICENSE
 ```

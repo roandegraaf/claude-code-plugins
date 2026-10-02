@@ -154,14 +154,6 @@
             "source": "./context-diet",
             "category": "productivity",
             "strict": false
-        },
-        {
-            "name": "aside",
-            "description": "Mod: ask a side question about the session in a pane, even while Claude works. A fork of the transcript answers and nothing lands in the main conversation.",
-            "version": "0.1.0",
-            "source": "./aside",
-            "category": "productivity",
-            "strict": false
         }
     ]
 }
