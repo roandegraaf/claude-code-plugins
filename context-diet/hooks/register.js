@@ -4,7 +4,8 @@ const SYSTEM = `You trim what a coding agent loads into its context for one soft
 You get a fingerprint of the project and an inventory of MCP servers, skills and agents.
 Answer with ONE JSON object and nothing else: {"mcp": [...], "skills": [...], "agents": [...]} listing what to HIDE.
 Rules:
-- Hide only what is clearly irrelevant to this project's stack and work. When unsure, keep it.
+- Hide an item only when it targets a different platform or domain than this project: iOS/macOS design guides in a web project, PCB or hardware tools in a web app, legal or contract tooling in a code repo, a payments provider the project does not use, a database service the project does not use. When unsure, keep it.
+- An item that fits the project's kind of work stays, even if the project does not depend on it by name. A website or web app keeps every web design, UI, frontend, redesign, animation, landing-page and design-tool item (Figma, Mobbin and the like); a mobile app keeps mobile design items.
 - Keep general-purpose development tools: GitHub, documentation lookups, browser devtools, code review, git, planning and workflow skills.
 - Use names exactly as they appear in the inventory, or "<plugin>:*" to hide every skill or agent of one plugin. Never invent names.`
 
@@ -156,7 +157,7 @@ async function setUpProject($) {
   const inv = KINDS.some(kind => Object.keys(inventory[kind]).length) ? inventory : await $.store.get('inventory')
   if (!inv) return 'context-diet: no inventory yet; send a prompt first, then run /diet init'
   const reply = await $.model.complete({
-    model: 'haiku',
+    model: 'sonnet',
     system: SYSTEM,
     prompt: `PROJECT\n${await fingerprint($)}\n\nINVENTORY\n${describeInventory(inv)}${config.keep.length ? `\n\nALWAYS KEPT (never list these): ${config.keep.join(', ')}` : ''}`,
     maxTokens: 2000,

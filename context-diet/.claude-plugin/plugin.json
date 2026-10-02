@@ -1,6 +1,6 @@
 {
   "name": "context-diet",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Per-project context diet: works out which MCP servers, skills and agents a project doesn't need and hides them from the listings Claude Code injects, so every session starts leaner. Hidden tools stay reachable through ToolSearch.",
   "author": {
     "name": "Roan de Graaf",

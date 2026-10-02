@@ -150,7 +150,7 @@
         {
             "name": "context-diet",
             "description": "Mod: per-project context diet. Works out which MCP servers, skills and agents a project doesn't need and hides them from the listings Claude Code injects, with no config to write; hidden tools stay reachable through ToolSearch.",
-            "version": "0.1.0",
+            "version": "0.1.1",
             "source": "./context-diet",
             "category": "productivity",
             "strict": false
