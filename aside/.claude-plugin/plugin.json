@@ -1,0 +1,12 @@
+{
+  "name": "aside",
+  "version": "0.1.0",
+  "description": "Ask a side question about the session in a pane, even while Claude is working: a fork of the transcript answers, and nothing lands in the main conversation.",
+  "author": {
+    "name": "Roan de Graaf",
+    "email": "info@roandegraaf.nl"
+  },
+  "homepage": "https://github.com/roandegraaf/claude-code-plugins",
+  "keywords": ["mod", "pane", "fork", "side-question"],
+  "license": "MIT"
+}

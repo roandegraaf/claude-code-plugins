@@ -126,7 +126,7 @@
         {
             "name": "ultrapowers",
             "description": "Tackle large tasks as a series of one-session 'slices': brainstorm a high-level overview, then implement -> handoff -> complete in fresh sessions so output quality never degrades. Slices may fan out parallel subagents for independent chunks. Run autonomously with /autopilot, in parallel waves of independent slices with /ultrapilot, or sketch ideas mid-brainstorm with /visualize. Small tasks are built inline.",
-            "version": "1.7.0",
+            "version": "1.8.0",
             "source": "./ultrapowers",
             "category": "productivity",
             "strict": false
@@ -145,6 +145,22 @@
             "version": "0.2.0",
             "source": "./dezzign",
             "category": "development",
+            "strict": false
+        },
+        {
+            "name": "context-diet",
+            "description": "Mod: per-project context diet. Works out which MCP servers, skills and agents a project doesn't need and hides them from the listings Claude Code injects, with no config to write; hidden tools stay reachable through ToolSearch.",
+            "version": "0.1.0",
+            "source": "./context-diet",
+            "category": "productivity",
+            "strict": false
+        },
+        {
+            "name": "aside",
+            "description": "Mod: ask a side question about the session in a pane, even while Claude works. A fork of the transcript answers and nothing lands in the main conversation.",
+            "version": "0.1.0",
+            "source": "./aside",
+            "category": "productivity",
             "strict": false
         }
     ]

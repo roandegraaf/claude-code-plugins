@@ -223,6 +223,7 @@ Tackle large tasks as a series of one-session "slices" so output quality never d
 - **`/autopilot [slug] [review|unattended]`** — Run the whole loop autonomously via fresh per-slice `slice-worker` subagents; pauses only to ask you a question, retries a crashed slice once, checkpoints itself before its context fills up, sends you a push notification when it stops or needs input, and never commits on its own. `review` pauses after every slice for approval; `unattended` refreshes context automatically at checkpoints and runs to the Definition of Done (e.g. overnight). Worker status is mirrored to disk, so a dropped message never derails the loop
 - **`/ultrapilot [slug] [review|unattended]`** — Like `/autopilot`, but parallel: each round a `wave-planner` subagent carves mutually independent slices (disjoint file scopes, frozen interface contracts), parallel `slice-worker`s build them concurrently in a shared tree, and a full-verification integration gate runs after every wave before the next is planned. Coupled work degrades gracefully to serial waves of one — quality never drops below the `/autopilot` baseline. Takes the same `review` / `unattended` modes
 - **Auto-clear checkpoints** — A bundled mod gives `/autopilot` and `/ultrapilot` a real context refresh at each checkpoint: it runs `/clear` and resumes the run itself, so nobody has to be at the keyboard. It won't resume a checkpoint that made no progress. Requires Claude Code ≥ 2.1.287 (tested on 2.1.287) and an interactive session; elsewhere (`-p`, cloud) the skills fall back to continuation legs
+- **Disk-truth relay** — The same mod attaches each worker's `status/*.md` file to its completion notification, so the orchestrator reads the authoritative result without nudging, and gives the orchestrator its measured context fill every turn of a run so the 30% checkpoint fires on a real number
 - **Model split** — `slice-worker` and `wave-planner` declare `model: opus`, so builders always run on Opus; the orchestrator, continuation legs, and every verifier/reviewer inherit the session model. Run on Fable and Fable orchestrates and verifies while Opus builds
 - **`/visualize <idea>`** — Spin up a token-frugal HTML mockup on a local server during a brainstorm, with optional click-to-pick options
 
@@ -270,6 +271,44 @@ Requires an Osmo membership with a synced library, the Chrome DevTools MCP, the 
 
 **Usage:**
 Run `/dezzign https://oude-site-van-de-klant.nl` and answer the three questions it batches; after a new site goes live, `/dezzign learn <url>` keeps the stramien current.
+
+---
+
+### :scissors: Context Diet
+
+A mod that keeps unused MCP servers, skills and agents out of a project's context. Every session otherwise starts with every tool name, every MCP server's instructions and every skill listed, whether the project needs them or not. Measured on a WordPress-style project: 39k → 19k characters of listings, about 5k tokens less per session. Requires Claude Code ≥ 2.1.287 (tested on 2.1.287).
+
+**Zero setup.** After your first prompt in a git project without a config, the mod fingerprints the project (top-level files, `package.json`/`composer.json` packages, the start of `CLAUDE.md` and `README.md`), asks Haiku which of your MCP servers, skills and agents are clearly irrelevant, and writes `.claude/context-diet.json`. A toast says what it hid; the diet applies from the next request. An existing file is never regenerated, so your edits stick.
+
+**Guardrails:**
+- Anything your global or project `CLAUDE.md` mentions by name is never hidden
+- `keep` in `~/.claude/context-diet.json` (or the project file) always beats a hide, for the tools you rely on everywhere: `{"keep": ["context7", "chrome-devtools", "ultrapowers:*"]}`
+- Hidden MCP tools stay reachable: a ToolSearch for them still finds them. Hiding a server does drop its MCP instructions, some of which are safety rules
+- Patterns take `*`; MCP entries are server names, skill entries skill names or `plugin:*`
+
+**Install:**
+```bash
+/plugin install context-diet@roans-cc-plugins
+```
+
+**Commands:**
+- **`/diet`** — Which config files apply, what is hidden and kept, and how many characters each listing lost
+- **`/diet init`** — Regenerate the project config from scratch
+- **`/diet reload`** — Re-read the config after editing it by hand
+
+---
+
+### :speech_balloon: Aside
+
+A mod for side questions. `/aside why did slice 4 take so long?` opens a pane and answers from a fork of the current transcript, so the main conversation never sees the answer. Questions typed in the pane's input stay out of the transcript entirely; the `/aside <question>` command line itself may be recorded like any slash command, so type sensitive or distracting questions in the pane. It works while Claude is busy, which makes it the way to ask what an `/autopilot` run is doing without touching the orchestrator's context. Follow-ups go in the pane's input field. Requires Claude Code ≥ 2.1.287 (tested on 2.1.287) and the terminal or the Desktop app.
+
+**Install:**
+```bash
+/plugin install aside@roans-cc-plugins
+```
+
+**Commands:**
+- **`/aside [question]`** — Open the aside pane, optionally asking right away. Esc closes it
 
 ---
 
@@ -371,8 +410,8 @@ claude-code-plugins/
 │   │   └── wave-planner.md       # Per-wave planning subagent used by /ultrapilot
 │   ├── hooks/
 │   │   ├── hooks.json            # Registers the mod
-│   │   └── register.js           # Auto-clear checkpoint mod
-│   ├── tests/auto-clear.test.ts  # claude plugin test
+│   │   └── register.js           # Auto-clear checkpoints + disk-truth relay mod
+│   ├── tests/                    # auto-clear + relay tests (claude plugin test)
 │   └── skills/
 │       ├── brainstorm/SKILL.md   # /brainstorm <idea>
 │       ├── implement/SKILL.md    # /implement [slug]
@@ -400,6 +439,14 @@ claude-code-plugins/
 │               ├── styles/       # 5 named style directions
 │               ├── sites/        # _TEMPLATE.md + 11 site fingerprints
 │               └── library/      # Mobbin-sourced variant patterns per slot + motion.md (MWG/Osmo map)
+├── context-diet/
+│   ├── .claude-plugin/plugin.json
+│   ├── hooks/                    # hooks.json + register.js: the attachment filter mod
+│   └── tests/diet.test.ts        # claude plugin test
+├── aside/
+│   ├── .claude-plugin/plugin.json
+│   ├── hooks/                    # hooks.json + register.js: /aside pane over $.model.fork
+│   └── tests/aside.test.ts       # claude plugin test
 ├── README.md
 └── LICENSE
 ```
