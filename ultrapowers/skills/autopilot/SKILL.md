@@ -18,7 +18,9 @@ Because each slice runs in a subagent, the orchestrator only accumulates terse s
 
 - **default** — run slices back-to-back; a checkpoint ends the session and the user re-runs after `/clear`.
 - **`review`** — the middle ground between fully autonomous and the manual loop: after every slice's handoff, present a two-line summary plus `git diff --stat`, then **AskUserQuestion**: continue / adjust course (fold their note into `NEXT_SLIDE.md` before the next spawn) / stop. Checkpoints still apply.
-- **`unattended`** — never hand a checkpoint back to the user; refresh context via **continuation legs** (see Checkpoint) and run to the Definition of Done, the cap, or a real block. Before starting, remind the user that on a laptop the machine sleeping kills an overnight run — suggest `caffeinate -dims` (macOS) in another terminal, or a cloud session.
+- **`unattended`** — never hand a checkpoint back to the user; refresh context via **auto-clear** or **continuation legs** (see Checkpoint) and run to the Definition of Done, the cap, or a real block. Before starting, remind the user that on a laptop the machine sleeping kills an overnight run — suggest `caffeinate -dims` (macOS) in another terminal, or a cloud session.
+
+**`auto-clear`** in the arguments is not a user option: this plugin's mod appends it to every `/autopilot` run when mods are live (Claude Code ≥ 2.1.287, interactive session). Strip it before parsing the positional arguments; its presence switches checkpoints to **Auto-clear** below.
 
 ## Precondition — permission mode & git safety
 
@@ -43,6 +45,7 @@ Autopilot can be launched at any point, including in the middle of a manual sess
 - **You were just implementing in THIS conversation (no `/clear`):** you hold the freshest knowledge of the in-flight slice. Do a **handoff now in your own context** — append the in-progress work to `PROGRESS.md` and write/refresh `NEXT_SLIDE.md` for whatever remains. This preflight is the ONLY time you write those files; once the loop starts, the workers own them.
 - **Fresh orchestrator (started right after `/clear` or in a new session):** check `git status`. If there are uncommitted changes that aren't reflected in `PROGRESS.md`/`NEXT_SLIDE.md`, don't assume — let the first slice subagent reconcile from the working tree (its slice-worker instructions cover this).
 - **Clean tree + fresh `NEXT_SLIDE.md`:** nothing to do — go straight to the loop.
+- **Leftover `status/checkpoint.json`:** delete it — it belonged to the run that just refreshed into you.
 
 ## The loop (orchestrator — keep yourself thin)
 
@@ -77,6 +80,12 @@ Autopilot runs unattended, so the user may be away at exactly the moments that m
 ## Checkpoint (context refresh)
 
 The orchestrator holds nothing that isn't already on disk, so refreshing is safe and lossless. Never checkpoint mid-slice — make sure the in-flight slice fully finished its handoff first.
+
+**Auto-clear (any mode, when `auto-clear` was in your arguments):** the mod does the refresh, a real `/clear` plus a fresh `/autopilot`, so nobody has to be at the keyboard. After teardown (below), and only if `max − slices run this session` is above 0 (otherwise this is the cap: stop and report), write `docs/slides/<slug>/status/checkpoint.json` as your LAST action:
+```json
+{"command": "ultrapowers:autopilot", "args": "<slug> <max − slices run this session> <checkpointEvery> <mode or omit>", "progressCount": <current progressCount>}
+```
+Then say one line (`Checkpoint — refreshing context, resuming at <next title>`) and end your turn. The mod skips the resume if `progressCount` didn't grow since its last refresh, so the non-progress guard survives the clear. Default and unattended modes below are the fallback when the mod isn't live.
 
 **Default mode:** stop the loop and tell the user, in two lines:
 > Checkpoint — context is filling up. I've completed N slices; M look remaining (next: `<title>`). Nothing is lost; it's all in `docs/slides/<slug>/`.

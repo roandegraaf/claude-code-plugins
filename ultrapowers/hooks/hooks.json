@@ -1,0 +1,4 @@
+{
+  "description": "ultrapowers auto-checkpoint mod",
+  "modules": ["./register.js"]
+}
