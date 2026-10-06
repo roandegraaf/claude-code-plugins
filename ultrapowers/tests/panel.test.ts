@@ -10,7 +10,7 @@ async function settle() {
   for (let i = 0; i < 20; i++) await new Promise(r => setTimeout(r, 0))
 }
 
-test('starting a run opens a panel showing progress, the current slice and workers', async ($, on) => {
+test('starting a run opens a compact panel showing progress and the current slice', async ($, on) => {
   const rel = (path: string) => path.slice(path.indexOf('docs/slides'))
   const dirs = new Set(['docs/slides', 'docs/slides/demo'])
   on('fs.exists', ($, e) => ({ value: dirs.has(rel(e.path)) || rel(e.path) in FILES }))
@@ -18,17 +18,16 @@ test('starting a run opens a panel showing progress, the current slice and worke
   on('fs.read', ($, e) => ({ value: FILES[rel(e.path)] }))
   on('session.surfaces', () => ({ value: ['terminal'] }))
   on('session.usage', () => ({ value: { startedAt: 0, context: { window: 1000, percent: 24 }, rateLimits: [] } }))
-  on('agent.list', () => ({ value: [{ id: 'a1', name: 'slice-3', type: 'ultrapowers:slice-worker', description: 'CSV export', status: 'running' }] }))
-  const opened: string[] = []
-  on('ui.open', ($, e) => { opened.push(e.id); return { value: { isPlaced: true } } })
+  const opened: Array<{ id: string; rows?: number }> = []
+  on('ui.open', ($, e) => { opened.push({ id: e.id, rows: e.rows }); return { value: { isPlaced: true } } })
   on('command.run', () => ({ text: '' }))
 
   await $.command.run({ command: 'ultrapowers:autopilot', args: 'demo' })
   await settle()
-  expect(opened).toEqual(['ultrapowers-run'])
+  expect(opened).toEqual([{ id: 'ultrapowers-run', rows: 4 }])
 
   const ui = await $.ui.mount({ plugin: 'ultrapowers', surface: 'terminal', component: 'Pane', props: {} as never, requestId: 'ultrapowers-run' } as never)
-  for (const text of ['1/3 done', '2 slices shipped', 'Build the CSV export endpoint.', '● slice-3: CSV export', '✓ login form', 'context 24%']) {
+  for (const text of ['1/3 done · 2 slices shipped', 'Now: Build the CSV export endpoint.', 'context 24%']) {
     expect(await ui.find({ text })).toBeTruthy()
   }
 })

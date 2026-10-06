@@ -3,6 +3,7 @@ const FLAG = 'auto-clear'
 const lastResumedProgress = new Map()
 
 const PANE = 'ultrapowers-run'
+const PANEL_ROWS = 4
 const relayedMtimes = new Map()
 let run = null
 let panel = null
@@ -77,7 +78,7 @@ async function showPanel($) {
 }
 
 async function openPanel($) {
-  await $.ui.open({ id: PANE, title: run.command === 'ultrapowers:ultrapilot' ? 'Ultrapilot' : 'Autopilot' })
+  await $.ui.open({ id: PANE, title: run.command === 'ultrapowers:ultrapilot' ? 'Ultrapilot' : 'Autopilot', rows: PANEL_ROWS })
   await refreshPanel($)
 }
 
@@ -104,7 +105,6 @@ async function refreshPanel($) {
     slices: [...progress.matchAll(/^## Slice:?\s*(.+)$/gm)].map(m => m[1].trim()),
     now: section(nextSlide, 'This slice').split('\n').slice(1).map(l => l.trim()).find(Boolean) ?? '',
     wave,
-    workers: (await $.agent.list()).filter(a => a.status === 'running').map(a => `${a.name ?? a.type}: ${a.description}`),
     percent: await contextPercent($),
   }
   $.ui.invalidate('ui.render')
@@ -193,17 +193,9 @@ export function register(on) {
     return Box({
       flexDirection: 'column',
       children: [
-        line(`${run.slug ?? 'resolving task'}`, { bold: true }),
-        line(`${minutes} min · ${run.refreshes} context refreshes`, { dimColor: true }),
-        line(' '),
-        line(`${bar(panel.dodDone, panel.dodTotal)} ${panel.dodDone}/${panel.dodTotal} done`, { color: 'green' }),
-        line(`${panel.slices.length} slices shipped`, { dimColor: true }),
-        line(' '),
-        line('Now', { bold: true }),
-        ...(panel.wave.length ? panel.wave.map(name => line(`◇ ${name}`)) : [line(panel.now || '-')]),
-        ...panel.workers.map(worker => line(`● ${worker}`, { color: 'cyan' })),
-        ...(panel.slices.length ? [line(' '), line('Recent', { bold: true }), ...panel.slices.slice(-3).reverse().map(s => line(`✓ ${s}`, { dimColor: true }))] : []),
-        line(' '),
+        line(`${run.slug ?? 'resolving task'} · ${minutes} min · ${run.refreshes} context refreshes`, { bold: true }),
+        line(`${bar(panel.dodDone, panel.dodTotal)} ${panel.dodDone}/${panel.dodTotal} done · ${panel.slices.length} slices shipped`, { color: 'green' }),
+        line(`Now: ${panel.wave.length ? panel.wave.join(', ') : panel.now || '-'}`),
         pct == null ? line('context: -', { dimColor: true }) : line(`context ${pct}% (checkpoint ~30%)`, { color: pct >= 30 ? 'red' : pct >= 20 ? 'yellow' : 'green' }),
       ],
     })

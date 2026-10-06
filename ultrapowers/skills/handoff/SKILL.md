@@ -48,7 +48,7 @@ Reconcile **everything** the session shipped, not just the slice `NEXT_SLIDE.md`
 ```
 
 ### 3. Check against the Definition of Done
-First, reconcile the DoD text itself: if decisions recorded this task legitimately changed the goal (scope cut, requirement reversed, target adjusted), update the affected DoD items now with a one-line note of what changed and why — otherwise `/complete` verifies against stale intent. Then compare the current state of the code to the **Definition of Done** in `OVERVIEW.md`, item by item.
+First, reconcile the DoD text itself: if decisions recorded this task legitimately changed the goal (scope cut, requirement reversed, target adjusted), update the affected DoD items now with a one-line note of what changed and why — otherwise `/complete` verifies against stale intent. Then compare the current state of the code to the **Definition of Done** in `OVERVIEW.md`, item by item. Keep the checkboxes current in `OVERVIEW.md`: tick `[x]` each item the code now meets, untick any that regressed, and leave `[user-gated]` items unticked (they belong to the user). The run panel reads these boxes as the task's progress.
 
 Items tagged `[user-gated]` (things only the user can perform or verify: live deploys, hardware runs, paid live calls, sign-offs) don't block: automation treats them as acceptance items, not work.
 

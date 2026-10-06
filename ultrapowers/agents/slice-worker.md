@@ -19,6 +19,7 @@ You are implementing ONE slice of an autonomous slice-workflow task in a fresh s
 6. On success, do the handoff in this same session — you are the only writer of these files during your slice:
    - Rewrite the `## Current state` header at the top of `PROGRESS.md` (create file/header if missing; keep it ≤40 lines: invariants in force, key decisions, map of key files).
    - Append a `## Slice:` entry (Shipped / Key decisions / Notes-leftovers, plus `Placeholder choices:` and `Runtime-unverified:` lines when applicable).
+   - Re-check the Definition of Done item by item. Keep the checkboxes current in `OVERVIEW.md`: tick `[x]` each item the code now meets, untick any that regressed, and leave `[user-gated]` items unticked (they belong to the user). The run panel reads these boxes as the task's progress.
    - Write the next `NEXT_SLIDE.md` as a standalone prompt (→ `STATUS: more`), or if the Definition of Done is now fully met → `STATUS: done`. When only `[user-gated]` items remain open, that is also `done` — list them so the orchestrator can build the acceptance checklist.
 
 ## Reporting protocol
