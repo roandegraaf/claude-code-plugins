@@ -3,13 +3,15 @@ const FLAG = 'auto-clear'
 const RESUMED = 'resumed'
 
 const PANE = 'ultrapowers-run'
-const PANEL_ROWS = 4
+const PANEL_ROWS = 6
 const relayedMtimes = new Map()
 let run = null
 let panel = null
 let loadedAt = 0
 let busy = false
 let refreshing = false
+let cwd = ''
+const live = { sliceStartedAt: null, activity: '', waiting: false }
 
 const qualify = name => (name?.includes(':') ? name : `ultrapowers:${name}`)
 const userArgs = args => args.split(/\s+/).filter(word => word && word !== FLAG && word !== RESUMED)
@@ -36,11 +38,6 @@ async function freshSliceStatuses($) {
   return fresh
 }
 
-async function contextPercent($) {
-  const percent = (await $.session.usage()).context.percent
-  return percent == null ? null : Math.round(percent)
-}
-
 async function readText($, path) {
   return (await $.fs.exists(path)) ? $.fs.read(path) : ''
 }
@@ -57,7 +54,57 @@ const sliceCount = progress => (progress.match(/^## Slice/gm) ?? []).length
 
 function startRun(command, args) {
   const words = userArgs(args)
-  run = { command, named: words[0], words, slug: null, startedAt: Date.now(), refreshes: run?.refreshes ?? 0, resumedAt: -1 }
+  run = { command, named: words[0], words, slug: null, startedAt: Date.now(), startProgress: null, refreshes: run?.refreshes ?? 0, resumedAt: -1 }
+}
+
+const relative = path => (cwd && path?.startsWith(`${cwd}/`) ? path.slice(cwd.length + 1) : path ?? '')
+const clip = (text, max = 70) => (text.length > max ? `${text.slice(0, max - 1)}…` : text)
+
+function describeActivity(e) {
+  switch (e.tool) {
+    case 'Edit':
+    case 'MultiEdit':
+    case 'Write':
+    case 'NotebookEdit':
+      return `editing ${relative(e.file_path ?? e.notebook_path)}`
+    case 'Read':
+      return `reading ${relative(e.file_path)}`
+    case 'Bash':
+      return `running ${clip(e.description || e.command || '')}`
+    case 'Grep':
+    case 'Glob':
+      return `searching ${clip(e.pattern ?? '')}`
+    case 'Agent':
+      return `spawned ${clip(e.description ?? 'a helper')}`
+    case 'WebFetch':
+    case 'WebSearch':
+      return 'researching on the web'
+    default:
+      return e.tool.startsWith('mcp__') ? `using ${e.tool.split('__')[1]}` : e.tool
+  }
+}
+
+function duration(ms) {
+  const minutes = Math.max(0, Math.round(ms / 60000))
+  return minutes < 60 ? `${minutes}m` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`
+}
+
+async function lastSliceStatus($, dir) {
+  if (!(await $.fs.exists(`${dir}/status`))) return { last: null, deferred: 0 }
+  const files = (await $.fs.list(`${dir}/status`)).filter(f => f.kind === 'file' && /^slice-.*\.md$/.test(f.name))
+  let deferred = 0
+  for (const f of files) if (/^STATUS:\s*deferred/m.test(await $.fs.read(`${dir}/status/${f.name}`))) deferred += 1
+  const newest = files.sort((a, b) => b.mtimeMs - a.mtimeMs)[0]
+  if (!newest) return { last: null, deferred }
+  const text = await $.fs.read(`${dir}/status/${newest.name}`)
+  return {
+    last: {
+      name: newest.name.replace(/\.md$/, ''),
+      status: text.match(/^STATUS:\s*(\S+)/m)?.[1] ?? '?',
+      verified: text.match(/^VERIFIED:\s*(.+)$/m)?.[1]?.trim() ?? '',
+    },
+    deferred,
+  }
 }
 
 async function resolveSlug($) {
@@ -145,12 +192,17 @@ async function refreshPanel($) {
   const progress = slug ? await readText($, `${dir}/PROGRESS.md`) : ''
   const nextSlide = slug ? await readText($, `${dir}/NEXT_SLIDE.md`) : ''
   const dod = section(overview, 'Definition of Done')
+  const open = dod.split('\n').filter(l => /^\s*- \[ \]/.test(l))
+  const slices = sliceCount(progress)
+  run.startProgress ??= slices
   panel = {
     dodDone: (dod.match(/^\s*- \[x\]/gim) ?? []).length,
     dodTotal: (dod.match(/^\s*- \[[ x]\]/gim) ?? []).length,
-    slices: sliceCount(progress),
+    nextItem: open.map(l => l.replace(/^\s*- \[ \]\s*/, '')).find(l => !l.includes('[user-gated]')) ?? '',
+    forUser: open.filter(l => l.includes('[user-gated]')).length,
+    slices,
     now: section(nextSlide, 'This slice').split('\n').slice(1).map(l => l.trim()).find(Boolean) ?? '',
-    percent: await contextPercent($),
+    ...(slug ? await lastSliceStatus($, dir) : { last: null, deferred: 0 }),
   }
   $.ui.invalidate('ui.render')
 }
@@ -168,6 +220,7 @@ function onRunStart($, command, args) {
 export function register(on) {
   on('session.start', async ($, e, next) => {
     loadedAt = await $.clock.now()
+    cwd = e.cwd
     $.clock.every(5000, () => {
       refreshPanel($).catch(() => {})
       maybeRefresh($)
@@ -206,6 +259,31 @@ export function register(on) {
     return next({ ...e, context: [...(e.context ?? []), ...blocks] })
   })
 
+  // Observe-only: what the worker is doing right now, for the panel.
+  on('tool.call', async ($, e, next) => {
+    if (!run) return next(e)
+    if (e.agentId) {
+      try {
+        live.activity = describeActivity(e)
+        $.ui.invalidate('ui.render')
+      } catch {}
+      return next(e)
+    }
+    if (e.tool === 'Agent') {
+      live.sliceStartedAt = Date.now()
+      live.activity = ''
+    }
+    if (e.tool !== 'AskUserQuestion') return next(e)
+    live.waiting = true
+    $.ui.invalidate('ui.render')
+    try {
+      return await next(e)
+    } finally {
+      live.waiting = false
+      $.ui.invalidate('ui.render')
+    }
+  })
+
   on('turn.start', async ($, e, next) => {
     if (!e.agentId) busy = true
     return next(e)
@@ -223,16 +301,25 @@ export function register(on) {
     if (e.requestId !== PANE) return next(e)
     const { Box, Text } = $.ui.resolve(e)
     if (!run || !panel) return Text({ dimColor: true, children: ['Waiting for the run to start...'] })
-    const minutes = Math.round((Date.now() - run.startedAt) / 60000)
     const line = (text, props = {}) => Text({ wrap: 'truncate-end', ...props, children: [text] })
-    const pct = panel.percent
+    const elapsed = Date.now() - run.startedAt
+    const shipped = panel.slices - (run.startProgress ?? panel.slices)
+    const pace = shipped > 0 ? ` · ~${duration(elapsed / shipped)} per slice` : ''
+    const { last } = panel
+    const later = [panel.forUser && `${panel.forUser} check${panel.forUser === 1 ? '' : 's'} for you at the end`, panel.deferred && `${panel.deferred} deferred`].filter(Boolean)
     return Box({
       flexDirection: 'column',
       children: [
-        line(`${run.slug ?? 'resolving task'} · ${minutes} min · ${run.refreshes} context refreshes`, { bold: true }),
-        line(`${bar(panel.dodDone, panel.dodTotal)} ${panel.dodDone}/${panel.dodTotal} done · ${panel.slices} slices shipped`, { color: 'green' }),
-        line(`Now: ${panel.now || '-'}`),
-        pct == null ? line('context: -', { dimColor: true }) : line(`context ${pct}%`, { color: pct >= 30 ? 'red' : pct >= 20 ? 'yellow' : 'green' }),
+        line(`${run.slug ?? 'resolving task'} · slice ${panel.slices + 1} · ${duration(elapsed)}${pace} · ${run.refreshes} refreshes`, { bold: true }),
+        line(`${bar(panel.dodDone, panel.dodTotal)} ${panel.dodDone}/${panel.dodTotal} done${panel.nextItem ? ` · next: ${panel.nextItem}` : ''}`, { color: 'green' }),
+        live.waiting
+          ? line('? waiting for your answer', { color: 'yellow', bold: true })
+          : line(`▶ ${panel.now || 'planning the next slice'}${live.sliceStartedAt ? ` · ${duration(Date.now() - live.sliceStartedAt)}` : ''}`),
+        line(`  ↳ ${live.activity || 'starting'}`, { dimColor: true }),
+        last
+          ? line(`${last.status === 'blocked' ? '✗' : '✓'} ${last.name} ${last.status}${last.verified ? ` · ${last.verified}` : ''}`, { color: last.status === 'blocked' ? 'red' : last.status === 'deferred' ? 'yellow' : undefined })
+          : line('no slice finished yet this run', { dimColor: true }),
+        later.length ? line(later.join(' · '), { color: 'yellow' }) : line('nothing waiting on you', { dimColor: true }),
       ],
     })
   })
