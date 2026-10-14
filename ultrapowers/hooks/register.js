@@ -1,4 +1,4 @@
-const ORCHESTRATORS = new Set(['ultrapowers:autopilot', 'ultrapowers:ultrapilot'])
+const ORCHESTRATOR = 'ultrapowers:autopilot'
 const FLAG = 'auto-clear'
 const RESUMED = 'resumed'
 
@@ -76,7 +76,7 @@ async function findMarker($) {
   return null
 }
 
-const resumeArgs = slug => [slug, ...run.words.filter(w => w === 'review' || /^\d+$/.test(w)), FLAG, RESUMED].join(' ')
+const resumeArgs = slug => [slug, ...run.words.filter(w => w === 'review'), FLAG, RESUMED].join(' ')
 
 // The model only drops the marker; whether, when and with which arguments to resume is decided here.
 async function maybeRefresh($) {
@@ -127,7 +127,7 @@ async function showPanel($) {
 }
 
 async function openPanel($) {
-  await $.ui.open({ id: PANE, title: run.command === 'ultrapowers:ultrapilot' ? 'Ultrapilot' : 'Autopilot', rows: PANEL_ROWS })
+  await $.ui.open({ id: PANE, title: 'Autopilot', rows: PANEL_ROWS })
   await refreshPanel($)
 }
 
@@ -145,14 +145,11 @@ async function refreshPanel($) {
   const progress = slug ? await readText($, `${dir}/PROGRESS.md`) : ''
   const nextSlide = slug ? await readText($, `${dir}/NEXT_SLIDE.md`) : ''
   const dod = section(overview, 'Definition of Done')
-  const waveDir = `${dir}/wave`
-  const wave = slug && (await $.fs.exists(waveDir)) ? (await $.fs.list(waveDir)).filter(f => f.name.endsWith('.md')).map(f => f.name.replace(/\.md$/, '')) : []
   panel = {
     dodDone: (dod.match(/^\s*- \[x\]/gim) ?? []).length,
     dodTotal: (dod.match(/^\s*- \[[ x]\]/gim) ?? []).length,
     slices: sliceCount(progress),
     now: section(nextSlide, 'This slice').split('\n').slice(1).map(l => l.trim()).find(Boolean) ?? '',
-    wave,
     percent: await contextPercent($),
   }
   $.ui.invalidate('ui.render')
@@ -178,7 +175,7 @@ export function register(on) {
     return next(e)
   })
 
-  on('command.run', { command: ['clear', 'autopilot', 'ultrapilot', 'ultrapowers:autopilot', 'ultrapowers:ultrapilot'] }, async ($, e, next) => {
+  on('command.run', { command: ['clear', 'autopilot', ORCHESTRATOR] }, async ($, e, next) => {
     // The refresh's own /clear and resume must neither end the run nor restart its bookkeeping.
     if (e.origin?.kind === 'plugin' && e.origin.name.split('@')[0] === 'ultrapowers') return next(e)
     const command = e.command === 'clear' ? 'clear' : qualify(e.command)
@@ -186,7 +183,7 @@ export function register(on) {
       run = null
       await $.ui.close({ id: PANE })
     }
-    if (!ORCHESTRATORS.has(command)) return next(e)
+    if (command !== ORCHESTRATOR) return next(e)
     onRunStart($, command, e.args)
     // Nothing can run the queued /clear in -p, SDK or cloud runs, so those keep the skill's continuation legs.
     if ((await $.session.surfaces()).length === 0) return next(e)
@@ -196,7 +193,7 @@ export function register(on) {
   on('tool.call', { tool: 'Skill' }, async ($, e, next) => {
     const skill = qualify(e.skill)
     // Continuation legs start the skill too; tagging one would make it clear the main session.
-    if (e.agentId || !ORCHESTRATORS.has(skill)) return next(e)
+    if (e.agentId || skill !== ORCHESTRATOR) return next(e)
     onRunStart($, skill, e.args ?? '')
     if ((await $.session.surfaces()).length === 0) return next(e)
     return next({ ...e, args: withFlag(e.args ?? '') })
@@ -234,7 +231,7 @@ export function register(on) {
       children: [
         line(`${run.slug ?? 'resolving task'} · ${minutes} min · ${run.refreshes} context refreshes`, { bold: true }),
         line(`${bar(panel.dodDone, panel.dodTotal)} ${panel.dodDone}/${panel.dodTotal} done · ${panel.slices} slices shipped`, { color: 'green' }),
-        line(`Now: ${panel.wave.length ? panel.wave.join(', ') : panel.now || '-'}`),
+        line(`Now: ${panel.now || '-'}`),
         pct == null ? line('context: -', { dimColor: true }) : line(`context ${pct}%`, { color: pct >= 30 ? 'red' : pct >= 20 ? 'yellow' : 'green' }),
       ],
     })

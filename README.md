@@ -221,15 +221,14 @@ Tackle large tasks as a series of one-session "slices" so output quality never d
 - **`/handoff [slug]`** — Log progress, then write the next slice — or route to `/complete` when the Definition of Done is met
 - **`/complete [slug]`** — Re-verify against the code, have an independent reviewer grade the diff in a fresh context, fold anything durable into `CLAUDE.md`, and archive the task docs. Items only a human can verify (deploys, hardware runs, paid live calls) end the report as a short "Your turn" list (action, then what working looks like), also saved as `ACCEPTANCE.md`, instead of stalling the task
 - **`/autopilot [slug] [review]`** — Run the whole loop autonomously via fresh per-slice `slice-worker` subagents until the Definition of Done is met; no iteration cap, no checkpoint stops. Pauses only to ask you a question, retries a crashed slice once, sends you a push notification when it stops or needs input, and never commits on its own. `review` pauses after every slice for approval. Worker status is mirrored to disk, so a dropped message never derails the loop
-- **`/ultrapilot [slug] [maxParallel] [review]`** — Like `/autopilot`, but parallel: each round a `wave-planner` subagent carves mutually independent slices (disjoint file scopes, frozen interface contracts), parallel `slice-worker`s build them concurrently in a shared tree, and a full-verification integration gate runs after every wave before the next is planned. Coupled work degrades gracefully to serial waves of one — quality never drops below the `/autopilot` baseline. Takes the same `review` mode
-- **Auto-clear** — A bundled mod refreshes the orchestrator's context after every slice (or wave): the orchestrator drops a marker, and the mod stops leftover workers, runs `/clear` and resumes the run with the same arguments, so nobody has to be at the keyboard. It won't resume when `PROGRESS.md` didn't grow since the last refresh. Requires Claude Code ≥ 2.1.287 (tested on 2.1.287) and an interactive session; elsewhere (`-p`, cloud) the skills fall back to continuation legs
-- **Run panel** — While `/autopilot` or `/ultrapilot` runs, a compact four-line pane opens on its own with the task, Definition of Done progress (handoffs tick the boxes as items are met), slices shipped, the current slice (or wave), elapsed time, auto-clear refreshes and the context fill. Running workers stay in the footer's agents list. It survives auto-clear and closes when the task is archived
+- **Auto-clear** — A bundled mod refreshes the orchestrator's context after every slice: the orchestrator drops a marker, and the mod stops leftover workers, runs `/clear` and resumes the run with the same arguments, so nobody has to be at the keyboard. It won't resume when `PROGRESS.md` didn't grow since the last refresh. Requires Claude Code ≥ 2.1.287 (tested on 2.1.287) and an interactive session; elsewhere (`-p`, cloud) the skills fall back to continuation legs
+- **Run panel** — While `/autopilot` runs, a compact four-line pane opens on its own with the task, Definition of Done progress (handoffs tick the boxes as items are met), slices shipped, the current slice, elapsed time, auto-clear refreshes and the context fill. Running workers stay in the footer's agents list. It survives auto-clear and closes when the task is archived
 - **Disk-truth relay** — The same mod attaches each worker's `status/*.md` file to its completion notification, so the orchestrator reads the authoritative result without nudging
-- **Model split** — `slice-worker` and `wave-planner` declare `model: opus`, so builders always run on Opus; the orchestrator, continuation legs, and every verifier/reviewer inherit the session model. Run on Fable and Fable orchestrates and verifies while Opus builds
+- **Model split** — `slice-worker` declares `model: opus`, so builders always run on Opus; the orchestrator, continuation legs, and every verifier/reviewer inherit the session model. Run on Fable and Fable orchestrates and verifies while Opus builds
 - **`/visualize <idea>`** — Spin up a token-frugal HTML mockup on a local server during a brainstorm, with optional click-to-pick options
 
 **Usage:**
-Run `/brainstorm add a billing dashboard` to scope it, then `/implement` → `/handoff` in fresh sessions until done, finishing with `/complete`. Or hand the whole thing to `/autopilot <slug>` and let it run unattended — or to `/ultrapilot <slug>` to build independent slices in parallel waves. State lives in `docs/slides/<slug>/`, so you can stop and resume anytime, and the three modes stay interchangeable mid-task.
+Run `/brainstorm add a billing dashboard` to scope it, then `/implement` → `/handoff` in fresh sessions until done, finishing with `/complete`. Or hand the whole thing to `/autopilot <slug>` and let it run unattended. State lives in `docs/slides/<slug>/`, so you can stop and resume anytime, and the manual loop and `/autopilot` stay interchangeable mid-task.
 
 ---
 
@@ -393,8 +392,7 @@ claude-code-plugins/
 │   ├── .claude-plugin/
 │   │   └── plugin.json           # Plugin metadata
 │   ├── agents/
-│   │   ├── slice-worker.md       # Per-slice subagent used by /autopilot and /ultrapilot
-│   │   └── wave-planner.md       # Per-wave planning subagent used by /ultrapilot
+│   │   └── slice-worker.md       # Per-slice subagent used by /autopilot
 │   ├── hooks/
 │   │   ├── hooks.json            # Registers the mod
 │   │   └── register.js           # Auto-clear, disk-truth relay and run panel mod
@@ -405,7 +403,6 @@ claude-code-plugins/
 │       ├── handoff/SKILL.md      # /handoff [slug]
 │       ├── complete/SKILL.md     # /complete [slug]
 │       ├── autopilot/SKILL.md    # /autopilot [slug]
-│       ├── ultrapilot/SKILL.md   # /ultrapilot [slug]
 │       └── visualize/SKILL.md    # /visualize <idea>
 ├── osmo/
 │   ├── .claude-plugin/

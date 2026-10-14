@@ -6,7 +6,7 @@ argument-hint: "[task-slug] [review]"
 
 # Autopilot — Autonomous Slice Loop
 
-Drives a slice-workflow task (see `/brainstorm`) to completion on its own. Each slice runs in a **fresh subagent context** — that subagent is the autonomous equivalent of `/clear` + `/implement` + `/handoff` in one clean session. You (the orchestrator) stay thin: spawn a slice, react to its result, repeat. Sibling: **`/ultrapilot`** runs this same loop with parallel waves of independent slices — faster on wide tasks, same guardrails; this serial loop remains the conservative default.
+Drives a slice-workflow task (see `/brainstorm`) to completion on its own. Each slice runs in a **fresh subagent context** — that subagent is the autonomous equivalent of `/clear` + `/implement` + `/handoff` in one clean session. You (the orchestrator) stay thin: spawn a slice, react to its result, repeat.
 
 This is the inverse of frugal: an unattended run spends tokens until the task is done. The non-progress guard is what stops a spinning run. Use the manual loop for tight cost control.
 
@@ -37,7 +37,7 @@ Two follow-ons, one line each, only when they apply:
 
 ## Models — orchestrate on the strongest model, build on Opus
 
-`slice-worker` and `wave-planner` declare `model: opus` in their frontmatter, so builders and planners always run on Opus whatever the session model is. Everything that judges their work inherits the session model instead: you, the continuation legs, `/complete`'s reviewer, and `/ultrapilot`'s integration-gate verifier. Run the session on Fable and you get Fable orchestrating and verifying while Opus builds — the intended split. Don't pass `model:` on spawns; the frontmatter already does it, and `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` is the user's override if they want everything on one model.
+`slice-worker` declares `model: opus` in its frontmatter, so builders always run on Opus whatever the session model is. Everything that judges their work inherits the session model instead: you, the continuation legs, and `/complete`'s reviewer. Run the session on Fable and you get Fable orchestrating and verifying while Opus builds — the intended split. Don't pass `model:` on spawns; the frontmatter already does it, and `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` is the user's override if they want everything on one model.
 
 ## Resolve which task
 
@@ -100,8 +100,6 @@ Append nothing else on a normal iteration. When continuing after `needs_input`, 
 ## Finalize
 
 When the run reaches `done` (including "only deferred/user-gated items remain"): tear down first (stop every spawned agent with TaskStop, so no late notification lands after the report), delete the transient `docs/slides/<slug>/status/` folder, then run the **`complete`** skill (`/complete <task-slug>`). It re-verifies the Definition of Done against the code, folds anything durable into `CLAUDE.md`, writes the acceptance checklist for any open user-gated items, and archives the docs. It will suggest a commit — do **not** auto-commit; leave that to the user.
-
-If during the run the remaining slices repeatedly looked mutually independent (disjoint file scopes), mention once in the report that `/ultrapilot <slug>` could have run them in parallel — useful for next time.
 
 ## Report
 

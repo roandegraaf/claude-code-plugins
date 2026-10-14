@@ -58,7 +58,7 @@ Rules: one item per thing to do, in the order to do them (deploys and migrations
 The fence above only shows the shape: print the block as plain markdown, never inside a code fence (a fenced copy shows literal `**` and `##`). Save the same block as `docs/slides/<task-slug>/ACCEPTANCE.md` (it archives with the task as the record), and print it in your report (step 6).
 
 ### 5. Clean up the slice docs
-- Delete the transient `docs/slides/<task-slug>/NEXT_SLIDE.md` and, if present, the transient `wave/` and `status/` folders (leftover autopilot/ultrapilot scaffolding).
+- Delete the transient `docs/slides/<task-slug>/NEXT_SLIDE.md` and, if present, the transient `status/` folder (leftover autopilot scaffolding).
 - Archive the rest: move `docs/slides/<task-slug>/` → `docs/slides/_archive/<task-slug>/`, preserving `OVERVIEW.md`, `PROGRESS.md`, and any `ACCEPTANCE.md` as the historical record. If `_archive/<task-slug>/` already exists from an earlier task, archive to `_archive/<task-slug>-2/` (increment as needed) instead of merging into it. Add a one-line marker at the top of the archived `OVERVIEW.md`: "Completed" — or "Completed (pending acceptance: N items, see ACCEPTANCE.md)".
 - If the user would rather delete the folder outright (no archive), do that instead — but only when they've said so. Default is archive.
 

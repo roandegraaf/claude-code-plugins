@@ -32,9 +32,9 @@ test('tags orchestrator runs with auto-clear, however they are named, and leaves
   const { commands } = fakeSession(on)
   fakeDisk(on, {})
   await $.command.run({ command: 'ultrapowers:autopilot', args: 'demo review' })
-  await $.command.run({ command: 'ultrapilot', args: '' })
+  await $.command.run({ command: 'autopilot', args: '' })
   await $.command.run({ command: 'status', args: '' })
-  expect(commands).toEqual(['ultrapowers:autopilot|demo review auto-clear', 'ultrapilot|auto-clear', 'status|'])
+  expect(commands).toEqual(['ultrapowers:autopilot|demo review auto-clear', 'autopilot|auto-clear', 'status|'])
 })
 
 test('a marker after progress stops leftover workers, clears and resumes; one without progress does not', async ($, on) => {
@@ -117,9 +117,9 @@ test('a short or missing slug still resumes the task whose folder holds the mark
   on('fs.read', ($, e) => ({ value: files[rel(e.path)] }))
   on('fs.write', ($, e) => { files[rel(e.path)] = e.text; return { value: undefined } })
 
-  await $.command.run({ command: 'ultrapowers:ultrapilot', args: 'ws03 2' })
+  await $.command.run({ command: 'ultrapowers:autopilot', args: 'ws03 review' })
   commands.length = 0
   await $.turn.complete(answered('t1'))
   await settle()
-  expect(commands).toEqual(['clear|', 'ultrapowers:ultrapilot|ws03-project-memory 2 auto-clear resumed'])
+  expect(commands).toEqual(['clear|', 'ultrapowers:autopilot|ws03-project-memory review auto-clear resumed'])
 })

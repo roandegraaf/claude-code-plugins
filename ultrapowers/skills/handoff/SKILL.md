@@ -84,8 +84,6 @@ State the paths you touched and the next step:
 > Logged this slice to `docs/slides/<task-slug>/PROGRESS.md` and wrote the next slice to `docs/slides/<task-slug>/NEXT_SLIDE.md`.
 > **Start a fresh session and run `/implement <task-slug>`.**
 
-If the remaining backlog clearly splits into two or more independent slices (disjoint file scopes), add one line: the user could run them in parallel with **`/ultrapilot <task-slug>`** instead of serially.
-
 …or, if done:
 
 > Definition of Done for `<task-slug>` is fully met — the task is complete. No new slice written.
