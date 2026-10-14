@@ -1,6 +1,6 @@
 const ORCHESTRATORS = new Set(['ultrapowers:autopilot', 'ultrapowers:ultrapilot'])
 const FLAG = 'auto-clear'
-const lastResumedProgress = new Map()
+const RESUMED = 'resumed'
 
 const PANE = 'ultrapowers-run'
 const PANEL_ROWS = 4
@@ -8,8 +8,12 @@ const relayedMtimes = new Map()
 let run = null
 let panel = null
 let loadedAt = 0
+let busy = false
+let refreshing = false
 
-const withFlag = args => (args.split(/\s+/).includes(FLAG) ? args : `${args} ${FLAG}`.trim())
+const qualify = name => (name?.includes(':') ? name : `ultrapowers:${name}`)
+const userArgs = args => args.split(/\s+/).filter(word => word && word !== FLAG && word !== RESUMED)
+const withFlag = args => [...userArgs(args), FLAG].join(' ')
 
 async function activeTasks($) {
   if (!(await $.fs.exists('docs/slides'))) return []
@@ -32,21 +36,6 @@ async function freshSliceStatuses($) {
   return fresh
 }
 
-async function findCheckpoint($) {
-  for (const slug of await activeTasks($)) {
-    const path = `docs/slides/${slug}/status/checkpoint.json`
-    if (!(await $.fs.exists(path))) continue
-    const text = (await $.fs.read(path)).trim()
-    if (!text) continue
-    try {
-      return { path, slug, ...JSON.parse(text) }
-    } catch {
-      return { path, slug, invalid: true }
-    }
-  }
-  return null
-}
-
 async function contextPercent($) {
   const percent = (await $.session.usage()).context.percent
   return percent == null ? null : Math.round(percent)
@@ -64,8 +53,68 @@ function section(md, heading) {
   return end < 0 ? rest : rest.slice(0, end + 3)
 }
 
+const sliceCount = progress => (progress.match(/^## Slice/gm) ?? []).length
+
 function startRun(command, args) {
-  run = { command, named: args.split(/\s+/)[0], slug: null, startedAt: Date.now(), refreshes: run?.refreshes ?? 0 }
+  const words = userArgs(args)
+  run = { command, named: words[0], words, slug: null, startedAt: Date.now(), refreshes: run?.refreshes ?? 0, resumedAt: -1 }
+}
+
+async function resolveSlug($) {
+  if (run.slug) return run.slug
+  const tasks = await activeTasks($)
+  const prefixed = tasks.filter(t => run.named && t.startsWith(`${run.named}-`))
+  run.slug = tasks.includes(run.named) ? run.named : prefixed.length === 1 ? prefixed[0] : tasks.length === 1 ? tasks[0] : null
+  return run.slug
+}
+
+async function findMarker($) {
+  for (const slug of await activeTasks($)) {
+    const path = `docs/slides/${slug}/status/refresh`
+    if ((await readText($, path)).trim()) return { slug, path }
+  }
+  return null
+}
+
+const resumeArgs = slug => [slug, ...run.words.filter(w => w === 'review' || /^\d+$/.test(w)), FLAG, RESUMED].join(' ')
+
+// The model only drops the marker; whether, when and with which arguments to resume is decided here.
+async function maybeRefresh($) {
+  if (!run || busy || refreshing) return
+  refreshing = true
+  try {
+    const marker = await findMarker($)
+    if (!marker) return
+    await $.fs.write(marker.path, '')
+    const { slug } = marker
+    run.slug = slug
+    const progress = sliceCount(await readText($, `docs/slides/${slug}/PROGRESS.md`))
+    // A fresh orchestrator has no memory of the last refresh, so this guard is what stops a stuck task from clearing and rerunning forever.
+    if (progress <= run.resumedAt) {
+      $.ui.toast(`ultrapowers: ${slug} made no progress since the last refresh; not resuming. Run /${run.command} ${slug} yourself.`)
+      return
+    }
+    run.resumedAt = progress
+    await stopLeftoverAgents($)
+    run.refreshes += 1
+    const { command } = run
+    const args = resumeArgs(slug)
+    await $.command.run({ command: 'clear', args: '' })
+    void $.command.run({ command, args }).catch(err => $.ui.toast(`ultrapowers: resume failed (${err}); run /${command} ${slug}`))
+    void showPanel($)
+  } catch (err) {
+    $.ui.toast(`ultrapowers: auto-clear failed (${err}); run /clear then /${run?.command} ${run?.slug ?? ''}`)
+  } finally {
+    refreshing = false
+  }
+}
+
+// Finished workers can linger as idle teammates; their late notifications would otherwise land in the fresh session.
+async function stopLeftoverAgents($) {
+  for (const agent of await $.agent.list()) {
+    if (agent.status !== 'running' || agent.parentId) continue
+    await $.tool.call({ tool: 'TaskStop', task_id: agent.id }).catch(() => {})
+  }
 }
 
 // The panel is a view; a failure in it must never hold up the run it shows.
@@ -84,25 +133,24 @@ async function openPanel($) {
 
 async function refreshPanel($) {
   if (!run) return
-  const tasks = await activeTasks($)
-  if (!run.slug) run.slug = tasks.includes(run.named) ? run.named : tasks.length === 1 ? tasks[0] : null
-  if (run.slug && !tasks.includes(run.slug)) {
-    $.ui.toast(`ultrapowers: ${run.slug} is done`)
+  const slug = await resolveSlug($)
+  if (slug && !(await activeTasks($)).includes(slug)) {
+    $.ui.toast(`ultrapowers: ${slug} is done`)
     await $.ui.close({ id: PANE })
     run = null
     return
   }
-  const dir = `docs/slides/${run.slug}`
-  const overview = run.slug ? await readText($, `${dir}/OVERVIEW.md`) : ''
-  const progress = run.slug ? await readText($, `${dir}/PROGRESS.md`) : ''
-  const nextSlide = run.slug ? await readText($, `${dir}/NEXT_SLIDE.md`) : ''
+  const dir = `docs/slides/${slug}`
+  const overview = slug ? await readText($, `${dir}/OVERVIEW.md`) : ''
+  const progress = slug ? await readText($, `${dir}/PROGRESS.md`) : ''
+  const nextSlide = slug ? await readText($, `${dir}/NEXT_SLIDE.md`) : ''
   const dod = section(overview, 'Definition of Done')
   const waveDir = `${dir}/wave`
-  const wave = run.slug && (await $.fs.exists(waveDir)) ? (await $.fs.list(waveDir)).filter(f => f.name.endsWith('.md')).map(f => f.name.replace(/\.md$/, '')) : []
+  const wave = slug && (await $.fs.exists(waveDir)) ? (await $.fs.list(waveDir)).filter(f => f.name.endsWith('.md')).map(f => f.name.replace(/\.md$/, '')) : []
   panel = {
     dodDone: (dod.match(/^\s*- \[x\]/gim) ?? []).length,
     dodTotal: (dod.match(/^\s*- \[[ x]\]/gim) ?? []).length,
-    slices: [...progress.matchAll(/^## Slice:?\s*(.+)$/gm)].map(m => m[1].trim()),
+    slices: sliceCount(progress),
     now: section(nextSlide, 'This slice').split('\n').slice(1).map(l => l.trim()).find(Boolean) ?? '',
     wave,
     percent: await contextPercent($),
@@ -115,71 +163,62 @@ function bar(done, total, width = 16) {
   return '█'.repeat(filled) + '░'.repeat(width - filled)
 }
 
+function onRunStart($, command, args) {
+  startRun(command, args)
+  void showPanel($)
+}
+
 export function register(on) {
   on('session.start', async ($, e, next) => {
     loadedAt = await $.clock.now()
-    $.clock.every(5000, () => refreshPanel($).catch(() => {}))
+    $.clock.every(5000, () => {
+      refreshPanel($).catch(() => {})
+      maybeRefresh($)
+    })
     return next(e)
   })
 
-  on('command.run', { command: ['clear', 'ultrapowers:autopilot', 'ultrapowers:ultrapilot'] }, async ($, e, next) => {
-    // A /clear this plugin runs never reaches its own hook, so only the person's /clear ends a run.
-    if (e.command === 'clear' && run) {
+  on('command.run', { command: ['clear', 'autopilot', 'ultrapilot', 'ultrapowers:autopilot', 'ultrapowers:ultrapilot'] }, async ($, e, next) => {
+    // The refresh's own /clear and resume must neither end the run nor restart its bookkeeping.
+    if (e.origin?.kind === 'plugin' && e.origin.name.split('@')[0] === 'ultrapowers') return next(e)
+    const command = e.command === 'clear' ? 'clear' : qualify(e.command)
+    if (command === 'clear' && run) {
       run = null
       await $.ui.close({ id: PANE })
     }
-    if (!ORCHESTRATORS.has(e.command)) return next(e)
-    startRun(e.command, e.args)
-    void showPanel($)
+    if (!ORCHESTRATORS.has(command)) return next(e)
+    onRunStart($, command, e.args)
     // Nothing can run the queued /clear in -p, SDK or cloud runs, so those keep the skill's continuation legs.
     if ((await $.session.surfaces()).length === 0) return next(e)
     return next({ ...e, args: withFlag(e.args) })
   })
 
   on('tool.call', { tool: 'Skill' }, async ($, e, next) => {
-    const skill = e.skill?.includes(':') ? e.skill : `ultrapowers:${e.skill}`
+    const skill = qualify(e.skill)
     // Continuation legs start the skill too; tagging one would make it clear the main session.
     if (e.agentId || !ORCHESTRATORS.has(skill)) return next(e)
-    startRun(skill, e.args ?? '')
-    void showPanel($)
+    onRunStart($, skill, e.args ?? '')
     if ((await $.session.surfaces()).length === 0) return next(e)
     return next({ ...e, args: withFlag(e.args ?? '') })
   })
 
   on('prompt.submit', async ($, e, next) => {
     const statuses = e.origin?.kind === 'task-notification' ? await freshSliceStatuses($) : []
-    if (!run && statuses.length === 0) return next(e)
+    if (statuses.length === 0) return next(e)
     const blocks = statuses.map(s => `ultrapowers: worker status file ${s.path} (disk is authoritative):\n${s.text}`)
-    const percent = run ? await contextPercent($) : null
-    if (percent != null) blocks.push(`ultrapowers: orchestrator context is ${percent}% full, measured (checkpoint at ~30%).`)
-    return blocks.length ? next({ ...e, context: [...(e.context ?? []), ...blocks] }) : next(e)
+    return next({ ...e, context: [...(e.context ?? []), ...blocks] })
+  })
+
+  on('turn.start', async ($, e, next) => {
+    if (!e.agentId) busy = true
+    return next(e)
   })
 
   on('turn.complete', async ($, e, next) => {
     const result = await next(e)
     if (e.agentId) return result
-    const checkpoint = await findCheckpoint($)
-    if (!checkpoint) return result
-
-    await $.fs.write(checkpoint.path, '')
-    if (e.reason !== 'answer') return result
-    if (checkpoint.invalid) {
-      $.ui.toast(`ultrapowers: unreadable checkpoint for ${checkpoint.slug}; run /clear then /ultrapowers:autopilot ${checkpoint.slug} yourself.`)
-      return result
-    }
-    const key = `${checkpoint.command} ${checkpoint.slug}`
-    // A fresh orchestrator loses the skill's own non-progress guard, so a stuck checkpoint would otherwise clear-and-rerun forever.
-    if (!ORCHESTRATORS.has(checkpoint.command) || checkpoint.progressCount <= (lastResumedProgress.get(key) ?? -1)) {
-      $.ui.toast(`ultrapowers: checkpoint for ${checkpoint.slug} made no progress since the last refresh; not resuming. Run /${checkpoint.command} ${checkpoint.slug} yourself.`)
-      return result
-    }
-    lastResumedProgress.set(key, checkpoint.progressCount)
-    if (run) run.refreshes += 1
-    void $.command.run({ command: 'clear', args: '' })
-      // Our own command.run hook skips calls this plugin makes, so tag the resume here.
-      .then(() => $.command.run({ command: checkpoint.command, args: withFlag(checkpoint.args) }))
-      .then(() => run && showPanel($))
-      .catch(err => $.ui.toast(`ultrapowers: auto-clear failed (${err}); run /clear then /${checkpoint.command} ${checkpoint.args}`))
+    busy = false
+    if (e.reason === 'answer') void maybeRefresh($)
     return result
   })
 
@@ -194,9 +233,9 @@ export function register(on) {
       flexDirection: 'column',
       children: [
         line(`${run.slug ?? 'resolving task'} · ${minutes} min · ${run.refreshes} context refreshes`, { bold: true }),
-        line(`${bar(panel.dodDone, panel.dodTotal)} ${panel.dodDone}/${panel.dodTotal} done · ${panel.slices.length} slices shipped`, { color: 'green' }),
+        line(`${bar(panel.dodDone, panel.dodTotal)} ${panel.dodDone}/${panel.dodTotal} done · ${panel.slices} slices shipped`, { color: 'green' }),
         line(`Now: ${panel.wave.length ? panel.wave.join(', ') : panel.now || '-'}`),
-        pct == null ? line('context: -', { dimColor: true }) : line(`context ${pct}% (checkpoint ~30%)`, { color: pct >= 30 ? 'red' : pct >= 20 ? 'yellow' : 'green' }),
+        pct == null ? line('context: -', { dimColor: true }) : line(`context ${pct}%`, { color: pct >= 30 ? 'red' : pct >= 20 ? 'yellow' : 'green' }),
       ],
     })
   })

@@ -1,7 +1,7 @@
 ---
 name: ultrapilot
-description: Run the slice workflow autonomously with parallel waves — a wave-planner subagent carves mutually independent slices (disjoint file scopes, frozen contracts), parallel slice-workers build them concurrently, and an integration gate verifies after every wave. Use when the user says "/ultrapilot", "run the slices in parallel", "parallel autopilot", or wants a task driven to completion faster than /autopilot without losing quality. Takes a task slug plus optional max-parallel, max-waves, checkpoint interval, and a mode — "review" pauses after each wave's gate, "unattended" refreshes context automatically at checkpoints. Coupled work degrades gracefully to single-slice waves (= /autopilot behavior).
-argument-hint: "[task-slug] [maxParallel] [maxWaves] [checkpointEvery] [review|unattended]"
+description: Run the slice workflow autonomously with parallel waves — a wave-planner subagent carves mutually independent slices (disjoint file scopes, frozen contracts), parallel slice-workers build them concurrently, and an integration gate verifies after every wave. Use when the user says "/ultrapilot", "run the slices in parallel", "parallel autopilot", or wants a task driven to completion faster than /autopilot without losing quality. Takes a task slug plus optional max-parallel and an optional "review" mode that pauses after each wave's gate. Refreshes its own context after every wave and runs until the Definition of Done is met; stops only for a question only the user can answer or a real block. Coupled work degrades gracefully to single-slice waves (= /autopilot behavior).
+argument-hint: "[task-slug] [maxParallel] [review]"
 ---
 
 # Ultrapilot — Parallel Wave Orchestrator
@@ -19,20 +19,25 @@ Layers: you → `wave-planner` + `slice-worker`s → their read-only scouts / ch
 
 ## Arguments & modes
 
-`/ultrapilot <slug> [maxParallel] [maxWaves] [checkpointEvery] [review|unattended]`. Defaults: `maxParallel` **3** (wave-width cap — keep it modest, quality first), `maxWaves` **10** (per-session cap), `checkpointEvery` **3** (waves before a context checkpoint).
+`/ultrapilot <slug> [maxParallel] [review]`. `maxParallel` defaults to **3** (wave-width cap — keep it modest, quality first). There is no wave cap and no checkpoint stop: the run goes until the Definition of Done is met, a question only the user can answer, or a real block.
 
-- **default** — a checkpoint ends the session and the user re-runs after `/clear`.
+- **default** — run waves back-to-back, refreshing context after every passed gate, to the Definition of Done.
 - **`review`** — after each wave's integration gate passes, present the wave summary (slices, titles, gate result, `git diff --stat`), then **AskUserQuestion**: continue / adjust course (pass the user's note to the next planner spawn) / stop.
-- **`unattended`** — never hand a checkpoint back to the user; refresh via **auto-clear** or **continuation legs** (see Checkpoint) and run to the Definition of Done, the cap, or a real block. On a laptop, suggest `caffeinate -dims` (macOS) first — the machine sleeping is what actually kills overnight runs.
 
-**`auto-clear`** in the arguments is not a user option: this plugin's mod appends it to every `/ultrapilot` run when mods are live (Claude Code ≥ 2.1.287, interactive session). Strip it before parsing the positional arguments; its presence switches checkpoints to **Auto-clear** below.
+Ignore anything else in the arguments (extra numbers, `unattended`).
+
+**Flags the mod adds** (Claude Code ≥ 2.1.287, interactive session) — strip them before reading the arguments:
+- **`auto-clear`** — the mod refreshes your context for you; use **Auto-clear** under Context refresh.
+- **`resumed`** — you are a fresh orchestrator the mod started after a refresh. Skip the precondition reminders, the task-folder listing and the laptop note; go straight to the loop with one line: `Resuming <slug>, planning wave <N>`.
+
+On a first start (not `resumed`), remind the user once that on a laptop the machine sleeping kills a long run — suggest `caffeinate -dims` (macOS) in another terminal.
 
 ## Precondition — permission mode & git safety
 
 Subagents **inherit this session's permission mode**; you cannot set it per spawn. The run must START in the mode you want the workers to have: **auto mode** (`Shift+Tab`, or launch with `claude --permission-mode auto`) for an unattended run, `acceptEdits` at minimum. In `default`/manual mode every worker file edit prompts — and a parallel wave stalls on prompts from several workers at once. Raise this once, and only if the session isn't already in one of those modes.
 
 Two follow-ons, one line each, only when they apply:
-- **Git.** Under auto mode the classifier will approve commits and pushes to this repo — but nothing in this workflow ever commits, pushes, or deploys on its own. Before an unattended run, offer the hard guarantee: `"permissions": {"deny": ["Bash(git commit:*)", "Bash(git push:*)"]}` in `.claude/settings.local.json`. A boundary stated only in conversation is the soft version — compaction can drop it. Say in the same breath that those rules persist, so they should come back out when the run ends — otherwise `/complete`'s own commit suggestion is blocked too.
+- **Git.** Under auto mode the classifier will approve commits and pushes to this repo — but nothing in this workflow ever commits, pushes, or deploys on its own. Before the run, offer the hard guarantee: `"permissions": {"deny": ["Bash(git commit:*)", "Bash(git push:*)"]}` in `.claude/settings.local.json`. A boundary stated only in conversation is the soft version — compaction can drop it. Say in the same breath that those rules persist, so they should come back out when the run ends — otherwise `/complete`'s own commit suggestion is blocked too.
 - **Shell commands.** Check the project allowlist (`.claude/settings.json` / `.claude/settings.local.json`): if the test/build commands are covered, say nothing. If not, warn once and point at `/fewer-permission-prompts` — auto mode falls back to prompting after 3 consecutive (or 20 total) classifier blocks, and a wide wave burns through that budget fastest.
 
 ## Models — orchestrate on the strongest model, build on Opus
@@ -47,12 +52,11 @@ Two follow-ons, one line each, only when they apply:
 
 - **You were just implementing in THIS conversation (no `/clear`):** you hold the freshest knowledge of the in-flight work. Do a handoff now in your own context — append it to `PROGRESS.md` — before starting the loop. This preflight is the only time you write those files outside the wave-join bookkeeping below.
 - **Fresh orchestrator:** don't reconcile the working tree yourself — the wave-planner's instructions cover folding unlogged `git status`/`git diff` work into `PROGRESS.md`.
-- **Leftover `status/checkpoint.json`:** delete it — it belonged to the run that just refreshed into you.
 - **Stale `wave/` folder** (a previous run stopped mid-wave): leave it — the planner reads it for intent and supersedes it. Never assume those slices shipped; the planner verifies against the code.
 
 ## The loop (orchestrator — keep yourself thin)
 
-Track `progressCount` = number of `## Slice:` entries in `PROGRESS.md` (0 if absent). Repeat up to `maxWaves` times:
+Track `progressCount` = number of `## Slice:` entries in `PROGRESS.md` (0 if absent). Repeat until done:
 
 1. **Plan the wave.** Spawn one **`ultrapowers:wave-planner`** subagent named `plan-<N>`, then end your turn and wait for its completion notification (there is no foreground flag — the harness runs every subagent in the background). Prompt template below — it is the complete assignment; SendMessage only ever delivers `needs_input` answers. Get its STATUS from the first line of its final message; if the notification reports a failure or the message has no valid token, read `docs/slides/<slug>/status/plan-<N>.md` — **disk is authoritative**; one nudge max (SendMessage resumes it). Branch:
    - `done` — Definition of Done is met (open `[user-gated]` items go to the acceptance checklist) → **Finalize**.
@@ -68,30 +72,27 @@ Track `progressCount` = number of `## Slice:` entries in `PROGRESS.md` (0 if abs
    - `blocked` — note it, let running siblings finish (their work is independent and still valid), spawn nothing new; after the join, report and stop. **Never commit, push, deploy, or destroy autonomously.**
    - Died (API/connection error, `failed` idle) with nothing on disk — re-spawn once with the same slice file (`w<N>s<K>-retry`); but first check its status file and `git status` within its scope: if the work actually finished, log it and don't redo it. Second failure → treat as `blocked`.
 5. **Join + integration gate.** When every wave worker is terminal: if any ended `blocked`, stop and report. Otherwise spawn ONE fresh `general-purpose` verifier subagent — no `model:`, so it inherits yours and the strongest model in the run does the judging; on Fable that is Fable checking Opus's work — then end your turn and wait for its notification. Prompt: *"Run the project's full verification — build, typecheck, complete test suite (find the commands in CLAUDE.md / package config). Fix nothing. Report pass/fail with failing output, tersely."*
-   - **Pass** → delete `wave/`, update the `## Current state` header at the top of `PROGRESS.md` from this wave's Key decisions (you are the sole writer in wave mode), log `Wave <N> ✓ (<width> slices): <titles>`, continue (in `review` mode: run the review gate first).
+   - **Pass** → delete `wave/`, update the `## Current state` header at the top of `PROGRESS.md` from this wave's Key decisions (you are the sole writer in wave mode), log `Wave <N> ✓ (<width> slices): <titles>`, then go to **Context refresh** (in `review` mode: run the review gate first).
    - **Fail** → have the verifier (or a re-run) execute just the failing portion once **in isolation** first: a failure that passes alone and on re-run is an inter-suite flake — log it in `PROGRESS.md` as flaky, don't spawn a fix worker, and treat the gate as passed with a flake warning. A real failure → write `wave/fix.md` yourself using the planner's slice template: File scope = the union of this wave's scopes, This slice = make the integration gate pass, the verifier's failing output pasted under Done when, Verify = exactly the commands that failed. Then spawn one fix-it `slice-worker` in wave mode on it (named `w<N>fix`) and re-run the verifier once. Still failing → stop and report as blocked with the output. Failures here usually live in the seams between slices — catching them is exactly what this gate is for.
 6. **Non-progress guard.** Re-count `## Slice:` entries; if the count didn't grow this wave, or the planner re-proposes slice titles that already shipped, the loop is spinning — stop and ask the user.
 7. **Honor runtime pause requests** ("pause", "pause after this wave"): finish the in-flight wave through its gate, then stop cleanly with resume instructions.
-8. **Only four things end a turn mid-run:** waiting on spawned agents' notifications, a checkpoint, a question for the user, or `done`. Never end a turn on a stated intention ("I'll plan wave 3 next") — do it.
-9. **Context checkpoint** — only between waves, after a passed gate, never mid-wave: at ~**30% context used** (use the `ultrapowers: orchestrator context is N% full, measured` line when present; deliberately early — orchestrator quality degrades past that; don't wait for the harness's context warnings) or after `checkpointEvery` waves this session → go to **Checkpoint**.
-
-If `maxWaves` is hit before `done`: do the same `NEXT_SLIDE.md` promotion as a checkpoint (step 1 there), then stop and report what's left (point at `PROGRESS.md`).
+8. **Only four things end a turn mid-run:** waiting on spawned agents' notifications, a context refresh, a question for the user, or `done`. Never end a turn on a stated intention ("I'll plan wave 3 next") — do it. Never stop to ask "shall I continue?" — continuing is the default; only a decision that is genuinely the user's (a product choice, credentials, a destructive step) is a question.
 
 ## Notify the user when you stop or pause
 
-On `needs_input` (send just before AskUserQuestion), `blocked`, a checkpoint, the wave cap, or `done`, send a one-line push via the **PushNotification** tool if available (may need loading via ToolSearch): `ultrapilot <slug>: <state> — <one short clause>`. If unavailable, skip silently.
+On `needs_input` (send just before AskUserQuestion), `blocked`, or `done`, send a one-line push via the **PushNotification** tool if available (may need loading via ToolSearch): `ultrapilot <slug>: <state> — <one short clause>`. If unavailable, skip silently.
 
-## Checkpoint (context refresh)
+## Context refresh (after every passed gate)
 
-Everything is on disk, so refreshing is lossless. Only checkpoint after a passed integration gate — never with workers in flight.
+Every wave that passes its integration gate ends with a refresh, so you never orchestrate on a full context. It is lossless: everything is on disk. Never refresh with workers in flight.
 
-1. Keep the workflow interoperable: if planned-but-unrun `wave/` slice files exist, promote the first to `NEXT_SLIDE.md`, stripping the wave-only parts (sibling notes, the targeted-only Verify caveat) so it reads as a normal solo slice, and delete the rest of `wave/`. The user can then continue with `/ultrapilot`, `/autopilot`, or a manual `/implement` — all stay compatible.
-2. **Auto-clear (any mode, when `auto-clear` was in your arguments):** the mod does the refresh, a real `/clear` plus a fresh `/ultrapilot`. After teardown (step 5), and only if `maxWaves − waves run this session` is above 0 (otherwise this is the cap: stop and report), write `docs/slides/<slug>/status/checkpoint.json` as your LAST action: `{"command": "ultrapowers:ultrapilot", "args": "<slug> <maxParallel> <maxWaves − waves run this session> <checkpointEvery> <mode or omit>", "progressCount": <current progressCount>}`. Say one line (`Checkpoint — refreshing context`) and end your turn. The mod skips the resume if `progressCount` didn't grow since its last refresh. Steps 3–4 below (default/unattended) are the fallback when the mod isn't live.
-3. **Default mode:** tell the user in two lines — waves/slices completed, what looks next, nothing is lost (it's all in `docs/slides/<slug>/`) — then: **Run `/clear`, then `/ultrapilot <slug>` to continue.** End your turn. **If the user replies "continue" in-session: do NOT silently comply** — explain in one line that continuing hot forfeits the refresh, then offer: (a) a fresh continuation leg (recommended), (b) a true `/clear` restart, (c) continue in-session anyway, their call.
-4. **Unattended mode:** don't hand the checkpoint back to the user. Spawn ONE **continuation leg**: a `general-purpose` subagent named `leg-K` — no `model:`, it inherits yours — then end your turn and wait for its notification. Prompt:
-   > Invoke the `ultrapowers:ultrapilot` skill (via the Skill tool; if unavailable, read this plugin's `skills/ultrapilot/SKILL.md` and follow it) for task `<slug>` with maxParallel=`<maxParallel>`, maxWaves=`<checkpointEvery>`, default mode, and act as its orchestrator with two overrides: (1) never checkpoint-continue or spawn legs yourself — your `maxWaves` IS your session budget; when you hit it, wrap up (including the NEXT_SLIDE promotion) and return; (2) you cannot reach the user, so on `needs_input`, `blocked`, or any user decision, end immediately and return `STATUS: <state>` plus the question/details. Return a terse summary: waves/slices completed, final state.
-   Branch on the leg's return: `done` → **Finalize**; budget hit → spawn the next leg (total waves bounded by `maxWaves` via `progressCount`); `needs_input` → ask the user, then a fresh leg with the answer appended; `blocked` → stop and report. Each leg is a fresh context returning only a summary — the 30% rule holds with no human at the boundary.
-5. **Teardown (every stop, pause, or checkpoint):** make sure no spawned agents are left running — stop leftovers with TaskStop. Orphaned workers otherwise linger and get reaped by hand in later sessions.
+1. **Teardown:** make sure no spawned agents are left running — stop leftovers with TaskStop. Orphaned workers otherwise linger and send late notifications.
+2. **Auto-clear (when `auto-clear` was in your arguments):** write the marker as your LAST action — `echo refresh > docs/slides/<slug>/status/refresh` — then say one line (`Wave <N> ✓ → refreshing`) and end your turn. The mod stops any leftover agents, runs `/clear`, and starts a fresh `/ultrapilot` with the same arguments. Do nothing else after writing the marker. Write it ONLY at this point — never on `needs_input`, `blocked`, `done`, or a pause, because the marker is what tells the mod the run should go on.
+3. **No mod (`auto-clear` absent: `-p`, SDK, cloud, or you are a leg):** skip the marker and plan the next wave right away. Once your context reaches ~30% (unless you are a leg), hand the rest of the run to a **continuation leg**: a `general-purpose` subagent named `leg-K` — no `model:`, it inherits yours — then end your turn and wait for its notification. Prompt:
+   > Invoke the `ultrapowers:ultrapilot` skill (via the Skill tool; if unavailable, read this plugin's `skills/ultrapilot/SKILL.md` and follow it) for task `<slug>` with maxParallel=`<maxParallel>` and act as its orchestrator with two overrides: (1) never spawn legs yourself — after 3 waves, wrap up (including the NEXT_SLIDE promotion below) and return; (2) you cannot reach the user, so on `needs_input`, `blocked`, or any user decision, end immediately and return `STATUS: <state>` plus the question/details. Return a terse summary: waves/slices completed, final state.
+   Branch on the leg's return: `done` → **Finalize**; returned after its 3 waves → spawn the next leg; `needs_input` → ask the user, then a fresh leg with the answer appended; `blocked` → stop and report.
+
+**On any stop or pause** (and when a leg wraps up): tear down as in step 1, and keep the workflow interoperable — if planned-but-unrun `wave/` slice files exist, promote the first to `NEXT_SLIDE.md`, stripping the wave-only parts (sibling notes, the targeted-only Verify caveat) so it reads as a normal solo slice, and delete the rest of `wave/`. The user can then continue with `/ultrapilot`, `/autopilot`, or a manual `/implement`.
 
 ## Spawn prompts (reuse each iteration)
 
@@ -105,8 +106,8 @@ Append nothing else on a normal iteration; deliver `needs_input` answers via **S
 
 ## Finalize
 
-When the planner returns `done`: delete any leftover `wave/` folder, stale `NEXT_SLIDE.md`, and the transient `status/` folder, then run the **`complete`** skill (`/complete <task-slug>`). It re-verifies the Definition of Done against the code, folds anything durable into `CLAUDE.md`, writes the acceptance checklist for open user-gated/deferred items, and archives the docs. It will suggest a commit — do **not** auto-commit.
+When the planner returns `done`: tear down first (stop every spawned agent with TaskStop, so no late notification lands after the report), delete any leftover `wave/` folder, stale `NEXT_SLIDE.md`, and the transient `status/` folder, then run the **`complete`** skill (`/complete <task-slug>`). It re-verifies the Definition of Done against the code, folds anything durable into `CLAUDE.md`, writes the acceptance checklist for open user-gated/deferred items, and archives the docs. It will suggest a commit — do **not** auto-commit.
 
 ## Report
 
-Short recap: waves run and their widths, slices shipped, integration-gate results (including any flakes logged), deferred items awaiting the user, where it stopped (done / cap / blocked / checkpoint), and how to resume (`/ultrapilot <slug>` — or `/autopilot` / `/implement`, which remain fully compatible).
+On `done`, `/complete`'s report IS your report — add at most one line on waves run and any flakes logged, and keep its **Your turn** block as the last thing on screen. On `blocked` or a pause: two or three lines — where it stopped, why, and how to resume (`/ultrapilot <slug>`, or `/autopilot` / `/implement`).

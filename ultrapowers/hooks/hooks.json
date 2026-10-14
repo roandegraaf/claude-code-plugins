@@ -1,4 +1,4 @@
 {
-  "description": "ultrapowers auto-checkpoint mod",
+  "description": "ultrapowers auto-clear, relay and run panel mod",
   "modules": ["./register.js"]
 }

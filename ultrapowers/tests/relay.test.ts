@@ -37,24 +37,6 @@ test('a worker notification carries each status file written since load, once', 
   expect(seen[1]).toBeUndefined()
 })
 
-test('during a run every prompt carries the measured context fill; a typed /clear ends that', async ($, on) => {
-  on('session.usage', () => ({ value: { startedAt: 0, context: { window: 1000, percent: 27.6 }, rateLimits: [] } }))
-  on('session.surfaces', () => ({ value: ['terminal'] }))
-  fakeDisk(on, {})
-  on('command.run', () => ({ text: '' }))
-  const seen = captureContext(on)
-
-  await $.prompt.submit({ text: 'hi' })
-  await $.command.run({ command: 'ultrapowers:autopilot', args: 'demo' })
-  await $.prompt.submit({ text: 'go on' })
-  await $.command.run({ command: 'clear', args: '' })
-  await $.prompt.submit({ text: 'unrelated' })
-
-  expect(seen[0]).toBeUndefined()
-  expect(seen[1]).toEqual(['ultrapowers: orchestrator context is 28% full, measured (checkpoint at ~30%).'])
-  expect(seen[2]).toBeUndefined()
-})
-
 test('status files already on disk when the mod loads are not relayed', async ($, on) => {
   on('clock.now', () => ({ value: 5000 }))
   on('session.start', ($, e) => ({ cwd: e.cwd }))

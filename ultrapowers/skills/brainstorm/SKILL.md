@@ -131,8 +131,8 @@ Tell the user the slug, the paths you wrote, and the exact next step:
 > Task `<task-slug>` scoped. Wrote `docs/slides/<task-slug>/OVERVIEW.md` and `docs/slides/<task-slug>/NEXT_SLIDE.md`.
 > **Start a fresh session** (`/clear`), then choose how to build it:
 > - **`/implement <task-slug>`** — build the first slice, then `/handoff` and repeat manually (one slice per session, with a `/clear` in between). Maximum control.
-> - **`/autopilot <task-slug>`** — run every remaining slice back-to-back autonomously to the Definition of Done, pausing only to ask you a question. Add **`review`** to approve each slice before the next starts, or **`unattended`** to run through context checkpoints without you (e.g. overnight).
-> - **`/ultrapilot <task-slug>`** — like `/autopilot`, but each round a planner carves mutually independent slices (disjoint file scopes) and parallel workers build them concurrently, with a full-verification gate after every wave. Fastest on tasks with parallel surface area; coupled work automatically degrades to serial. Spends the most tokens. Also takes `review` / `unattended`.
+> - **`/autopilot <task-slug>`** — run every remaining slice back-to-back autonomously to the Definition of Done, refreshing its own context after every slice and pausing only to ask you a question. Add **`review`** to approve each slice before the next starts.
+> - **`/ultrapilot <task-slug>`** — like `/autopilot`, but each round a planner carves mutually independent slices (disjoint file scopes) and parallel workers build them concurrently, with a full-verification gate after every wave. Fastest on tasks with parallel surface area; coupled work automatically degrades to serial. Spends the most tokens. Also takes `review`.
 > Tip: commit `OVERVIEW.md` (and later `PROGRESS.md`) — they're the durable record. `NEXT_SLIDE.md` is transient scaffolding.
 
 If other task folders in `docs/slides/` are sitting scoped-but-unstarted (no `PROGRESS.md`), mention them in one line — they rot silently otherwise.
