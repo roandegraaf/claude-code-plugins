@@ -71,6 +71,8 @@ Track `progressCount` = number of `## Slice:` entries in `docs/slides/<task-slug
 6. **Honor runtime pause requests.** If the user says "pause" or "pause after slice N" mid-run, finish the in-flight slice through its handoff, then stop cleanly with resume instructions. Never abandon a slice mid-flight, and never ignore a pause.
 **Only four things end a turn mid-run:** waiting on a spawned worker's notification, a context refresh, a question for the user, or `done`. Never end a turn on a stated intention ("I'll spawn slice 4 next") — spawn it. Never stop to ask "shall I continue?" — continuing is the default; only a decision that is genuinely the user's (a product choice, credentials, a destructive step) is a question.
 
+**Stay at the project root:** never `cd` in your own shell; address task files as `docs/slides/<slug>/…`. A `cd` sticks for the rest of the session.
+
 **Single-writer rule:** while the loop runs, the worker owns `PROGRESS.md` and `NEXT_SLIDE.md`. Never write them yourself between a spawn and its STATUS — concurrent handoff writes corrupt them (duplicate `## Slice:` sections are the telltale symptom).
 
 ## Notify the user when you stop or pause

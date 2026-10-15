@@ -13,6 +13,7 @@ function fakeDisk(on, files: Record<string, string>) {
 
 function fakeSession(on, agents: Array<{ id: string; status: string; parentId?: string }> = []) {
   on('session.surfaces', () => ({ value: ['terminal'] }))
+  on('session.root', () => ({ value: '/repo' }))
   on('agent.list', () => ({ value: agents.map(a => ({ description: a.id, type: 'ultrapowers:slice-worker', ...a })) }))
   const stopped: string[] = []
   on('tool.call', ($, e) => { stopped.push((e as { task_id: string }).task_id); return { result: 'ok' } })
@@ -103,6 +104,28 @@ test('runs with nowhere to draw stay untagged so the skill keeps continuation le
   on('command.run', ($, e) => { seen.push(e.args); return { text: '' } })
   await $.command.run({ command: 'ultrapowers:autopilot', args: 'demo' })
   expect(seen).toEqual(['demo'])
+})
+
+test('a shell cd into the task folder does not hide the marker from the mod', async ($, on) => {
+  const { commands } = fakeSession(on)
+  const root = '/repo'
+  let cwd = root
+  const files: Record<string, string> = { [`${root}/${PROGRESS}`]: '## Slice: one\n' }
+  const abs = (path: string) => (path.startsWith('/') ? path : `${cwd}/${path}`)
+  on('fs.exists', ($, e) => ({ value: abs(e.path) === `${root}/docs/slides` || abs(e.path) in files }))
+  on('fs.list', ($, e) => ({ value: abs(e.path) === `${root}/docs/slides` ? [{ name: 'demo', kind: 'dir', size: 0, mtimeMs: 0, isLink: false }] : [] }))
+  on('fs.read', ($, e) => ({ value: files[abs(e.path)] }))
+  on('fs.write', ($, e) => { files[abs(e.path)] = e.text; return { value: undefined } })
+
+  await $.command.run({ command: 'ultrapowers:autopilot', args: 'demo' })
+  await settle()
+  commands.length = 0
+  cwd = `${root}/docs/slides/demo`
+
+  files[`${root}/${MARKER}`] = 'refresh\n'
+  await $.turn.complete(answered('t1'))
+  await settle()
+  expect(commands).toEqual(['clear|', 'ultrapowers:autopilot|demo auto-clear resumed'])
 })
 
 test('a short or missing slug still resumes the task whose folder holds the marker', async ($, on) => {

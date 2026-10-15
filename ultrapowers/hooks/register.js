@@ -17,15 +17,20 @@ const qualify = name => (name?.includes(':') ? name : `ultrapowers:${name}`)
 const userArgs = args => args.split(/\s+/).filter(word => word && word !== FLAG && word !== RESUMED)
 const withFlag = args => [...userArgs(args), FLAG].join(' ')
 
+// A shell `cd` moves the working directory that relative $.fs paths resolve against; the project root stays put.
+const slidesDir = async $ => `${await $.session.root()}/docs/slides`
+const taskDir = async ($, slug) => `${await slidesDir($)}/${slug}`
+
 async function activeTasks($) {
-  if (!(await $.fs.exists('docs/slides'))) return []
-  return (await $.fs.list('docs/slides')).filter(t => t.kind === 'dir' && !t.name.startsWith('_')).map(t => t.name)
+  const slides = await slidesDir($)
+  if (!(await $.fs.exists(slides))) return []
+  return (await $.fs.list(slides)).filter(t => t.kind === 'dir' && !t.name.startsWith('_')).map(t => t.name)
 }
 
 async function freshSliceStatuses($) {
   const fresh = []
   for (const slug of await activeTasks($)) {
-    const dir = `docs/slides/${slug}/status`
+    const dir = `${await taskDir($, slug)}/status`
     if (!(await $.fs.exists(dir))) continue
     for (const file of await $.fs.list(dir)) {
       if (file.kind !== 'file' || !file.name.endsWith('.md')) continue
@@ -117,7 +122,7 @@ async function resolveSlug($) {
 
 async function findMarker($) {
   for (const slug of await activeTasks($)) {
-    const path = `docs/slides/${slug}/status/refresh`
+    const path = `${await taskDir($, slug)}/status/refresh`
     if ((await readText($, path)).trim()) return { slug, path }
   }
   return null
@@ -135,7 +140,7 @@ async function maybeRefresh($) {
     await $.fs.write(marker.path, '')
     const { slug } = marker
     run.slug = slug
-    const progress = sliceCount(await readText($, `docs/slides/${slug}/PROGRESS.md`))
+    const progress = sliceCount(await readText($, `${await taskDir($, slug)}/PROGRESS.md`))
     // A fresh orchestrator has no memory of the last refresh, so this guard is what stops a stuck task from clearing and rerunning forever.
     if (progress <= run.resumedAt) {
       $.ui.toast(`ultrapowers: ${slug} made no progress since the last refresh; not resuming. Run /${run.command} ${slug} yourself.`)
@@ -187,7 +192,7 @@ async function refreshPanel($) {
     run = null
     return
   }
-  const dir = `docs/slides/${slug}`
+  const dir = slug ? await taskDir($, slug) : ''
   const overview = slug ? await readText($, `${dir}/OVERVIEW.md`) : ''
   const progress = slug ? await readText($, `${dir}/PROGRESS.md`) : ''
   const nextSlide = slug ? await readText($, `${dir}/NEXT_SLIDE.md`) : ''

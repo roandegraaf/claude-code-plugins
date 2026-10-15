@@ -3,6 +3,7 @@ import { expect, test } from 'claude-code/testing'
 type Entry = { kind: 'file' | 'dir'; mtimeMs: number; text?: string }
 
 function fakeDisk(on, entries: Record<string, Entry>) {
+  on('session.root', () => ({ value: '/repo' }))
   const rel = (path: string) => path.slice(path.indexOf('docs/slides'))
   on('fs.exists', ($, e) => ({ value: rel(e.path) === 'docs/slides' || rel(e.path) in entries }))
   on('fs.list', ($, e) => {

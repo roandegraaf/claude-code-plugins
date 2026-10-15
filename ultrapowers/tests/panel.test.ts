@@ -22,6 +22,7 @@ test('starting a run opens a compact panel showing progress and the current slic
   }))
   on('fs.read', ($, e) => ({ value: FILES[rel(e.path)] }))
   on('session.surfaces', () => ({ value: ['terminal'] }))
+  on('session.root', () => ({ value: '/repo' }))
   on('session.usage', () => ({ value: { startedAt: 0, context: { window: 1000, percent: 24 }, rateLimits: [] } }))
   const opened: Array<{ id: string; rows?: number }> = []
   on('ui.open', ($, e) => { opened.push({ id: e.id, rows: e.rows }); return { value: { isPlaced: true } } })
@@ -43,6 +44,7 @@ test('starting a run opens a compact panel showing progress and the current slic
 test('the panel says so while the run waits for your answer', async ($, on) => {
   on('fs.exists', () => ({ value: false }))
   on('session.surfaces', () => ({ value: ['terminal'] }))
+  on('session.root', () => ({ value: '/repo' }))
   on('ui.open', () => ({ value: { isPlaced: true } }))
   on('command.run', () => ({ text: '' }))
   let answer: (v: unknown) => void = () => {}
