@@ -216,7 +216,7 @@ Tackle large tasks as a series of one-session "slices" so output quality never d
 ```
 
 **Commands:**
-- **`/brainstorm <idea>`** — Think through a task. Small ones are built inline; large ones get a high-level `OVERVIEW.md` (north star + checkable Definition of Done) and a first `NEXT_SLIDE.md`
+- **`/brainstorm <idea>`** — Think through a task. Small ones are built inline; large ones get a high-level `OVERVIEW.md` (north star + a Definition of Done written as behavior scenarios that workers exercise, not just build) and a first `NEXT_SLIDE.md`
 - **`/implement [slug]`** — In a fresh session, build only the current slice from `NEXT_SLIDE.md`, guarded by the overview. When a slice splits into independent chunks, it may fan out parallel subagents to build them faster
 - **`/handoff [slug]`** — Log progress, then write the next slice — or route to `/complete` when the Definition of Done is met
 - **`/complete [slug]`** — Re-verify against the code, have an independent reviewer grade the diff in a fresh context, fold anything durable into `CLAUDE.md`, and archive the task docs. Items only a human can verify (deploys, hardware runs, paid live calls) end the report as a short "Your turn" list (action, then what working looks like), also saved as `ACCEPTANCE.md`, instead of stalling the task

@@ -39,6 +39,7 @@ Explore just the parts of the codebase this slice touches. Don't review the whol
 
 ### 3. Build the slice — and only the slice
 - Stay inside the slice's scope boundaries. Respect the OVERVIEW's **Non-goals**.
+- Tick each `Done when` box in `NEXT_SLIDE.md` as soon as it's met and verified; already-ticked boxes are finished work from an earlier attempt — start at the first open one.
 - Follow the key decisions / patterns recorded in OVERVIEW.
 - If you discover the slice is too big to finish well in one session, **stop and narrow it**: ship the coherent part, and note the remainder so `/handoff` can carve it into the next slice. Protecting output quality matters more than finishing the whole slice.
 - If you hit a real decision the docs don't cover, use **AskUserQuestion** rather than guessing.
@@ -56,6 +57,8 @@ A slice doesn't have to be built serially. When the work splits into genuinely i
 
 ### 4. Verify
 Run the relevant tests / build / typecheck for what you changed. Exit codes are the truth — stale IDE/language-server diagnostics (e.g. SourceKit) routinely report phantom errors on code that builds clean. Report results honestly — if something fails, say so with the output.
+
+When a Definition-of-Done item this slice delivers carries a `GIVEN … WHEN … THEN` scenario, exercise that scenario (a test that encodes it, or a live run) — it is the check, not the build.
 
 **Headless green is not proof for user-facing changes.** If the slice changed UI or interactive behavior, exercise it live when the environment allows (dev server + browser tools, run the app). If a live check genuinely isn't possible this session, say so explicitly and record it as `Runtime-unverified` in the handoff — unverified UI slices have shipped invisible breakage for multiple sessions before anyone noticed.
 

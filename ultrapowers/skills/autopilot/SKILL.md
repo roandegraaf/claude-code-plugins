@@ -60,7 +60,7 @@ Track `progressCount` = number of `## Slice:` entries in `docs/slides/<task-slug
    - **Normalize off-list tokens:** anything like "complete", "DONE", "finished", "implemented" means THIS SLICE finished — treat it as `more` unless you can verify the Definition of Done itself is met. Never finalize the task on a slice-level "done" claim alone.
    - **Trust the `VERIFIED:` evidence line** (commands + exit codes) — do not re-run builds or tests a worker already ran green. Stale IDE/language-server diagnostics (e.g. SourceKit) are not failures; exit codes are.
 3. **Branch:**
-   - `done` — the Definition of Done is met (open `[user-gated]` items go to the acceptance checklist). Exit the loop → **Finalize**.
+   - `done` — the Definition of Done is met (open `[user-gated]` and not-verified items go to the acceptance checklist). Exit the loop → **Finalize**.
    - `more` — a slice shipped and the next `NEXT_SLIDE.md` is written. Log a one-line update, then go to **Context refresh** (in `review` mode: run the review gate first).
    - `deferred` — the slice hit a step automation can't finish (paid run, credentials, hardware, external approval). Record what the worker reported, tell the user in the one-liner, and go to **Context refresh** if independent work remains. When nothing remains except deferred/user-gated items, the automation is done → **Finalize** (the acceptance checklist picks these up).
    - `needs_input` — take its question + options, ask the user via **AskUserQuestion**, then **continue the SAME subagent via `SendMessage`** with the answer. Only if it can't be continued, re-spawn with the answer appended. Doesn't count toward the non-progress check.
@@ -101,7 +101,7 @@ Append nothing else on a normal iteration. When continuing after `needs_input`, 
 
 ## Finalize
 
-When the run reaches `done` (including "only deferred/user-gated items remain"): tear down first (stop every spawned agent with TaskStop, so no late notification lands after the report), delete the transient `docs/slides/<slug>/status/` folder, then run the **`complete`** skill (`/complete <task-slug>`). It re-verifies the Definition of Done against the code, folds anything durable into `CLAUDE.md`, writes the acceptance checklist for any open user-gated items, and archives the docs. It will suggest a commit — do **not** auto-commit; leave that to the user.
+When the run reaches `done` (including "only deferred/user-gated/not-verified items remain"): tear down first (stop every spawned agent with TaskStop, so no late notification lands after the report), delete the transient `docs/slides/<slug>/status/` folder, then run the **`complete`** skill (`/complete <task-slug>`). It re-verifies the Definition of Done against the code, folds anything durable into `CLAUDE.md`, writes the acceptance checklist for any open user-gated items, and archives the docs. It will suggest a commit — do **not** auto-commit; leave that to the user.
 
 ## Report
 

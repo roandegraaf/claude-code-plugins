@@ -28,6 +28,8 @@ docs/slides/<task-slug>/
 
 Take the user's seed idea (their message / arguments) and have a short back-and-forth. Propose an approach, surface a couple of real tradeoffs, and confirm direction. Keep it **high level** — this is scoping, not designing the implementation.
 
+Look at the relevant code before asking anything factual — never ask the user for something you can verify yourself (the stack, what exists, how it's wired). Spend their attention on intent, scope and priorities.
+
 Use the **AskUserQuestion** tool only when there is a genuine decision you can't reasonably default (scope boundary, tech choice, a fork that changes the whole shape). Batch related questions. Do **not** interrogate the user — "brainstorm a bit," then move on. If the direction is already clear, skip straight to writing.
 
 If the idea has a visual dimension — a layout, a flow, a screen, a UI component — **automatically ask** whether to sketch it before moving on. Use the **AskUserQuestion** tool to offer the choice: one option to sketch it now with the **`visualize`** skill, one option to skip and keep brainstorming. Only invoke `visualize` if the user picks the sketch option. Never auto-launch it without that confirmation, and don't bother asking when the task has no visual angle (pure backend, refactors, config, etc.).
@@ -83,19 +85,26 @@ paid tiers or spend approvals, hardware, third-party sign-offs. "None" is fine.
 The major areas/components involved — unordered. Not a step-by-step plan.
 
 ## Definition of Done
-A short, CHECKABLE checklist. Each item must be verifiable by looking at the
-code or running something — not a vague aspiration. This is what lets us STOP.
+A short, CHECKABLE checklist of observable behavior. One checkbox line per
+item with a short name, then an indented scenario line saying how to see it
+work. This is what lets us STOP.
 Tag items only a human can perform or verify (live deploy, hardware run, paid
 live call, sign-off) with `[user-gated]` — automation treats those as
 acceptance items for the user, not as blockers.
-- [ ] ...
-- [ ] ... `[user-gated]`
+- [ ] Dark mode follows the OS on first load
+  GIVEN a user who never picked a theme, WHEN they open the app on a dark-mode OS, THEN it renders dark
+- [ ] Payments go through in production `[user-gated]`
+  GIVEN the live deploy, WHEN buying the cheapest plan with a real card, THEN the order shows "Paid"
 
 ## Open questions
 Anything still undecided (or "None").
 ```
 
 The **Definition of Done** is the most important section. Make every item concrete and checkable — `/handoff` uses it to decide when the task is complete and to stop manufacturing new slices.
+
+- **Behavior, not implementation.** If the code could change without anything a user or caller sees changing, it's not a DoD item ("uses a React context" is not; "the choice survives a reload" is). Implementation choices belong in Key decisions.
+- **Every item gets a scenario** (`GIVEN … WHEN … THEN …` on the indented line). It's what a worker exercises live instead of trusting a green build, and what `/complete` turns into the user's acceptance steps. Cover the edge case the user cares about most, not just the happy path.
+- Keep the checkbox line itself short — the run panel shows it as the next item.
 
 If the Preconditions section is non-empty, surface it to the user as an upfront checklist during the brainstorm ("you'll need to have X, Y ready") — every credential discovered mid-run is a stall in an otherwise autonomous session.
 
@@ -117,7 +126,9 @@ Read `docs/slides/<task-slug>/OVERVIEW.md` first — it's the north star and gua
 - Don't: <what to defer to later slices>
 
 ## Done when
-<Concrete, checkable outcome for THIS slice.>
+Tick each box in this file as it's met — a resumed attempt picks up at the first open one.
+- [ ] <concrete, checkable outcome for THIS slice, with how to verify it>
+- [ ] ...
 
 When finished, run `/handoff` to record progress and write the next slice.
 ```
@@ -129,6 +140,7 @@ Pick a first slice that establishes a foundation (scaffolding, data model, the t
 Tell the user the slug, the paths you wrote, and the exact next step:
 
 > Task `<task-slug>` scoped. Wrote `docs/slides/<task-slug>/OVERVIEW.md` and `docs/slides/<task-slug>/NEXT_SLIDE.md`.
+> Skim the Definition of Done before building: it holds what you said, so the useful catch is what's missing — the case you care about most should have its own scenario.
 > **Start a fresh session** (`/clear`), then choose how to build it:
 > - **`/implement <task-slug>`** — build the first slice, then `/handoff` and repeat manually (one slice per session, with a `/clear` in between). Maximum control.
 > - **`/autopilot <task-slug>`** — run every remaining slice back-to-back autonomously to the Definition of Done, refreshing its own context after every slice and pausing only to ask you a question. Add **`review`** to approve each slice before the next starts.

@@ -48,11 +48,11 @@ Reconcile **everything** the session shipped, not just the slice `NEXT_SLIDE.md`
 ```
 
 ### 3. Check against the Definition of Done
-First, reconcile the DoD text itself: if decisions recorded this task legitimately changed the goal (scope cut, requirement reversed, target adjusted), update the affected DoD items now with a one-line note of what changed and why — otherwise `/complete` verifies against stale intent. Then compare the current state of the code to the **Definition of Done** in `OVERVIEW.md`, item by item. Keep the checkboxes current in `OVERVIEW.md`: tick `[x]` each item the code now meets, untick any that regressed, and leave `[user-gated]` items unticked (they belong to the user). The run panel reads these boxes as the task's progress.
+First, reconcile the DoD text itself: if decisions recorded this task legitimately changed the goal (scope cut, requirement reversed, target adjusted), update the affected DoD items now with a one-line note of what changed and why — otherwise `/complete` verifies against stale intent. Then compare the current state of the code to the **Definition of Done** in `OVERVIEW.md`, item by item. Where an item carries a `GIVEN … WHEN … THEN` scenario, tick it only when that scenario was exercised (a test that covers it, or a live run) — code that merely looks right stays unticked. If it's built but the scenario *can't* run in this environment (no browser, real device, live service), leave `[ ]` and append `— not verified: <reason>`; like `[user-gated]`, it then counts as met for automation and goes to the user's acceptance checklist. Keep the checkboxes current in `OVERVIEW.md`: tick `[x]` each item the code now meets, untick any that regressed, and leave `[user-gated]` items unticked (they belong to the user). The run panel reads these boxes as the task's progress.
 
 Items tagged `[user-gated]` (things only the user can perform or verify: live deploys, hardware runs, paid live calls, sign-offs) don't block: automation treats them as acceptance items, not work.
 
-**If every item is satisfied — or only `[user-gated]` items remain open: STOP. Do not invent more work.** Don't write a new slice — tell the user the task looks done and to run **`/complete <task-slug>`** to verify, fold anything durable into `CLAUDE.md`, and archive the docs (it writes an acceptance checklist for any open user-gated items). Resisting the urge to manufacture another slice is the whole point of this step.
+**If every item is satisfied — or only `[user-gated]` and not-verified items remain open: STOP. Do not invent more work.** Don't write a new slice — tell the user the task looks done and to run **`/complete <task-slug>`** to verify, fold anything durable into `CLAUDE.md`, and archive the docs (it writes an acceptance checklist for any open user-gated items). Resisting the urge to manufacture another slice is the whole point of this step.
 
 ### 4. Otherwise, write the next `NEXT_SLIDE.md`
 Pick the **single** most valuable next slice — small enough to ship with high quality in one fresh session. Don't plan several ahead; we re-assess each time. Overwrite the file with a standalone prompt (reference the task's real folder path):
@@ -71,10 +71,14 @@ Read `docs/slides/<task-slug>/OVERVIEW.md` (north star) and
 - Don't: <what to defer; respect the OVERVIEW Non-goals>
 
 ## Done when
-<Concrete, checkable outcome for THIS slice.>
+Tick each box in this file as it's met — a resumed attempt picks up at the first open one.
+- [ ] <concrete, checkable outcome for THIS slice, with how to verify it>
+- [ ] ...
 
 When finished, run `/handoff`.
 ```
+
+Before overwriting, check the old `NEXT_SLIDE.md`'s `Done when` boxes: any left open are work the slice didn't finish — carry them into the new slice (or the leftovers note) instead of dropping them.
 
 If the last slice surfaced new constraints or open questions that affect the whole task, also update the relevant section of `OVERVIEW.md` (keep it high level).
 

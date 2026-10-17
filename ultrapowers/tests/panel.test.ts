@@ -1,7 +1,7 @@
 import { expect, test } from 'claude-code/testing'
 
 const FILES: Record<string, string> = {
-  'docs/slides/demo/OVERVIEW.md': '# Demo\n\n## Definition of Done\n- [x] login works\n- [ ] [user-gated] live payment\n- [ ] export works\n\n## Open questions\n- [ ] not counted\n',
+  'docs/slides/demo/OVERVIEW.md': '# Demo\n\n## Definition of Done\n- [x] login works\n  GIVEN a user, WHEN they log in, THEN they land on Today\n- [ ] [user-gated] live payment\n  GIVEN prod, WHEN paying, THEN the order is Paid\n- [ ] dark mode follows the OS — not verified: no browser\n  GIVEN a dark OS, WHEN opening, THEN it renders dark\n- [ ] export works\n  GIVEN rows, WHEN exporting, THEN a CSV downloads\n\n## Open questions\n- [ ] not counted\n',
   'docs/slides/demo/PROGRESS.md': '## Slice: auth model\nok\n\n## Slice: login form\nok\n',
   'docs/slides/demo/NEXT_SLIDE.md': '# Next slice — demo\n\n## This slice\n\nBuild the CSV export endpoint.\n',
   'docs/slides/demo/status/slice-2.md': 'STATUS: more\nVERIFIED: pnpm test → 0 (12/12)\nLogin form shipped.\n',
@@ -36,7 +36,7 @@ test('starting a run opens a compact panel showing progress and the current slic
   await $.tool.call({ tool: 'Edit', file_path: 'src/export/csv.ts', old_string: 'a', new_string: 'b', agentId: 'slice-3' } as never)
 
   const ui = await $.ui.mount({ plugin: 'ultrapowers', surface: 'terminal', component: 'Pane', props: {} as never, requestId: 'ultrapowers-run' } as never)
-  for (const text of ['demo · slice 3', '1/3 done · next: export works', '▶ Build the CSV export endpoint.', '↳ editing src/export/csv.ts', '✓ slice-2 more · pnpm test → 0 (12/12)', '1 check for you at the end']) {
+  for (const text of ['demo · slice 3', '1/4 done · next: export works', '▶ Build the CSV export endpoint.', '↳ editing src/export/csv.ts', '✓ slice-2 more · pnpm test → 0 (12/12)', '2 checks for you at the end']) {
     expect(await ui.find({ text })).toBeTruthy()
   }
 })

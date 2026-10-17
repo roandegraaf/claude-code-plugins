@@ -198,13 +198,14 @@ async function refreshPanel($) {
   const nextSlide = slug ? await readText($, `${dir}/NEXT_SLIDE.md`) : ''
   const dod = section(overview, 'Definition of Done')
   const open = dod.split('\n').filter(l => /^\s*- \[ \]/.test(l))
+  const isForUser = l => l.includes('[user-gated]') || /not verified:/i.test(l)
   const slices = sliceCount(progress)
   run.startProgress ??= slices
   panel = {
     dodDone: (dod.match(/^\s*- \[x\]/gim) ?? []).length,
     dodTotal: (dod.match(/^\s*- \[[ x]\]/gim) ?? []).length,
-    nextItem: open.map(l => l.replace(/^\s*- \[ \]\s*/, '')).find(l => !l.includes('[user-gated]')) ?? '',
-    forUser: open.filter(l => l.includes('[user-gated]')).length,
+    nextItem: open.map(l => l.replace(/^\s*- \[ \]\s*/, '')).find(l => !isForUser(l)) ?? '',
+    forUser: open.filter(isForUser).length,
     slices,
     now: section(nextSlide, 'This slice').split('\n').slice(1).map(l => l.trim()).find(Boolean) ?? '',
     ...(slug ? await lastSliceStatus($, dir) : { last: null, deferred: 0 }),
