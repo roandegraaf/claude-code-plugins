@@ -1,6 +1,6 @@
 # Library — Services, process and audience
 
-Outside inspiration from Mobbin (swept 2026-09-30), translated into house rules. Not evidence from our own builds — `stramien.md` stays the source of truth; this file is the variant pool that step 5 of SKILL.md draws from to avoid the default spine.
+Outside inspiration from Mobbin (swept 2026-09-30), translated into house rules. Not evidence from our own builds — `stramien.md` stays the house default; this file is the variant pool that step 5 of SKILL.md draws from to avoid the default spine.
 
 Covers the "capability blocks" slot of the spine and everything that explains *what the client does and
 how*: service overviews, capability indexes, process and steps, audience forks, sector pickers,

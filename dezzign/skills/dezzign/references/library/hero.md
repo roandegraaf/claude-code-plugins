@@ -1,6 +1,6 @@
 # Library — Hero
 
-Outside inspiration from Mobbin (swept 2026-09-30), translated into house rules. Not evidence from our own builds — `stramien.md` stays the source of truth; this file is the variant pool that step 5 of SKILL.md draws from to avoid the default spine.
+Outside inspiration from Mobbin (swept 2026-09-30), translated into house rules. Not evidence from our own builds — `stramien.md` stays the house default; this file is the variant pool that step 5 of SKILL.md draws from to avoid the default spine.
 
 The stramien already owns the four hero types (video, photo with scrim, flat colour field, split),
 `### One highlighted word`, `### The photo tile as a glyph`, `### A brand clip shape` and

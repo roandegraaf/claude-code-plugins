@@ -1,6 +1,6 @@
 # Library — Proof and trust
 
-Outside inspiration from Mobbin (swept 2026-09-30), translated into house rules. Not evidence from our own builds — `stramien.md` stays the source of truth; this file is the variant pool that step 5 of SKILL.md draws from to avoid the default spine.
+Outside inspiration from Mobbin (swept 2026-09-30), translated into house rules. Not evidence from our own builds — `stramien.md` stays the house default; this file is the variant pool that step 5 of SKILL.md draws from to avoid the default spine.
 
 Covers slot 4 (orientation or proof strip) and slot 9 (trust) of `### The default homepage order`: stats, results, reviews and scores, testimonials, logo walls, certificates, awards, press and comparisons. The stramien's own `### Count-up statistics` (three centred numbers counting from zero) is the default this file offers alternatives to. Proportions are read off low-res screenshots; anything marked `(estimated)` is not a measurement.
 

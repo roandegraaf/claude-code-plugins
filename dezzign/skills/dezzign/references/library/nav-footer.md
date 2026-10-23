@@ -1,6 +1,6 @@
 # Library — Navigation and footer
 
-Outside inspiration from Mobbin (swept 2026-09-30), translated into house rules. Not evidence from our own builds — `stramien.md` stays the source of truth; this file is the variant pool that step 5 of SKILL.md draws from to avoid the default spine.
+Outside inspiration from Mobbin (swept 2026-09-30), translated into house rules. Not evidence from our own builds — `stramien.md` stays the house default; this file is the variant pool that step 5 of SKILL.md draws from to avoid the default spine.
 
 What the stramien already fixes for this slot, and this file does not repeat: the utility topbar, the two header behaviours (transparent-to-solid, floating detached pill), the accent nav CTA, the button with a detached arrow tile, title-plus-description mega menus, the full-screen mobile overlay as the default, four footer columns, the footer as a composition, the pre-footer CTA band, the legal row with "Realisatie door Zeker Zichtbaar", the inset footer and the three closing devices. Everything below is either a new shape or a variant that says how it differs.
 
