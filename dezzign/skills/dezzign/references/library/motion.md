@@ -4,10 +4,9 @@ Made With GSAP and Osmo resources mapped to stramien slots and style directions 
 
 **How to read a row.** `mwg/effectNNN` is a Made With GSAP effect (`~/.osmo/library/mwg/effectNNN.md`),
 a bare slug is an Osmo Vault resource (`~/.osmo/library/vault/<slug>.md`). *Fits* and *Avoid in*
-name the five directions by slug. This file is outside inspiration mapped onto the house rules.
-By default a direction's `## Motion character` and the stramien's `## Motion` win where they
-disagree with a row here; a concept that earns more motion may go past them (`concept.md`), within
-`## Restraint rules`.
+name the five directions by slug. This file is outside inspiration mapped onto the house rules: it
+never overrides a direction's `## Motion character` or the stramien's `## Motion`. Where they
+disagree, the direction wins.
 
 **Driver shorthand** used in the notes: *scrub* = tied to page scroll through ScrollTrigger
 (usually pinned, usually with Lenis); *wheel* = reads wheel delta directly and the demo locks page

@@ -1,6 +1,6 @@
 # Library — Showcase
 
-Outside inspiration from Mobbin (swept 2026-09-30), translated into house rules. Not evidence from our own builds — `stramien.md` stays the house default; this file is the variant pool that step 5 of SKILL.md draws from to avoid the default spine.
+Outside inspiration from Mobbin (swept 2026-09-30), translated into house rules. Not evidence from our own builds — `stramien.md` stays the source of truth; this file is the variant pool that step 5 of SKILL.md draws from to avoid the default spine.
 
 Scope: the showcase slot of the homepage spine (projects, cases, ranges, units) plus its siblings — news, events, vacancy teasers and the index/overview pages they link to. The house default is "a Swiper row of rounded photo cards" (pull `### Carousels`). Everything below is a way out of that default. Pull `### Square versus rounded images` first: every pattern here inherits the direction's image radius, never its own.
 

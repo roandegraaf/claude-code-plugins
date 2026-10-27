@@ -1,13 +1,12 @@
 ---
 name: dezzign
-description: Redesign a client's existing website the ZekerZichtbaar way. Use when the user says "/dezzign <url>", asks for a website redesign, a sitemap plus page designs for an existing site, "/dezzign jury <url>" to score a site or design blind, or "/dezzign learn <url>" to fold a newly built site into the house stramien. Crawls the old site, finds a concept anchored in the client's own world, builds the full sitemap, picks Osmo and Made With GSAP resources, designs every page plus phone boards and a states sheet on a Design canvas, scores old and new with a blind critic, and exports the final design to Figma.
+description: Redesign a client's existing website the ZekerZichtbaar way. Use when the user says "/dezzign <url>", asks for a website redesign, a sitemap plus page designs for an existing site, or "/dezzign learn <url>" to fold a newly built site into the house stramien. Crawls the old site, builds the full sitemap, picks Osmo resources, designs every page on a Claude Design canvas and exports to Figma.
 ---
 
 # Dezzign
 
-Three branches. `/dezzign <url>` redesigns a client's existing site. `/dezzign jury <url>` scores
-any site or design blind, the way a jury would. `/dezzign learn <url>` folds a site we just built
-into the house stramien.
+Two branches. `/dezzign <url>` redesigns a client's existing site: crawl, sitemap, questions, Osmo
+picks, canvas, Figma. `/dezzign learn <url>` folds a site we just built into the house stramien.
 
 **Browser rule, no exceptions.** All browsing goes through the **Chrome DevTools MCP**
 (`mcp__chrome-devtools__*`). Never `claude-in-chrome` — that is a standing global rule from the
@@ -15,25 +14,6 @@ user, not a preference. Open your own page and close it when done.
 
 **Output is design only.** No code for the new site, and no copy rewrite beyond what the chosen
 brand-handling mode implies.
-
-## What leads
-
-Every redesign used to come out of the same spine with a different palette. The order of authority
-is now:
-
-1. **The fixed rules** in `craft.md` `### Fixed rules`: honest content, legibility, orientation,
-   usable by hand and keyboard, one scroll-hijacking moment per page, copy in the source language.
-   No concept breaks these.
-2. **The concept** (`concept.md`): one idea anchored in a fact about this client. It decides what
-   the pages are about, the signature moments, the motion verb, the copy voice and the closing
-   devices.
-3. **The house defaults**: the stramien, the chosen style direction and the library. They answer
-   every slot the concept says nothing about. The concept may break any of them, including
-   `### No elevation` and `### The accent is punctuation, never a field`, when the client's world
-   asks for it. Every break goes in `brief.md` under `## Breaks` with its reason. A break without
-   a reason in the client's world is a whim; revert it.
-
-A design that follows every house default is the stramien rendered again. That is not the goal.
 
 ---
 
@@ -52,37 +32,33 @@ grep '^#' "${CLAUDE_PLUGIN_ROOT}/skills/dezzign/references/stramien.md"
 awk -v h='### The four hero types' 'BEGIN{n=match(h,/[^#]/)-1} index($0,h)==1{f=1;print;next} f&&/^#+ /{if(match($0,/[^#]/)-1<=n) exit} f' "${CLAUDE_PLUGIN_ROOT}/skills/dezzign/references/stramien.md"
 ```
 
-For any other reference file, the same command takes one more change, the file:
+For the variant library (see the table below), the same command takes one more change, the file:
 
 ```bash
 awk -v h='### The stat stack on a hairline spine' 'BEGIN{n=match(h,/[^#]/)-1} index($0,h)==1{f=1;print;next} f&&/^#+ /{if(match($0,/[^#]/)-1<=n) exit} f' "${CLAUDE_PLUGIN_ROOT}/skills/dezzign/references/library/proof.md"
 ```
 
-**Change only the quoted heading, and for another file the file name.** Copy the command whole
-each time — do not turn it into a shell function, because shell state does not survive between
-tool calls and the next call would fail with `command not found`. Use `${CLAUDE_PLUGIN_ROOT}`,
-never a relative path: when `/dezzign` runs, the working directory is the client's repo, not this
-plugin.
+**Change only the quoted heading, and for a library pull the file name.** Copy the command whole each time — do not turn
+it into a shell function, because shell state does not survive between tool calls and the next call
+would fail with `command not found`. Use `${CLAUDE_PLUGIN_ROOT}`, never a relative path: when
+`/dezzign` runs, the working directory is the client's repo, not this plugin.
 
 A `###` heading pulls one pattern (`### No elevation`, 16 lines). A `##` heading pulls the whole
 topic and every pattern under it (`## Hero`, 112 lines).
 
 Below, **pull** `### Something` means the stramien command with that heading, and
-**pull** `### Something` **from `x.md`** means the command pointed at that file.
+**pull** `### Something` **from `library/x.md`** means the library command pointed at that file.
 
 Which file answers which question:
 
 | File | How to read it | What it decides |
 |---|---|---|
-| `concept.md` | **in full**, ~180 lines, before step 3 | the idea, its anchor, the swap test, the concept card, how breaks are recorded |
-| `craft.md` | **in full** before step 5; by section afterwards | the fixed rules, not-a-twin, mobile at 390, the states sheet, type detail, contrast, Dutch copy rules, which AI tells to remove and which house patterns are not tells |
-| `critic.md` | **by section**: `## Evidence` in step 1, the rest in step 8 and in `jury` | evidence capture, the rubric, the blind critic brief, the revision loop, the score card |
-| `styles/<direction>.md` | **in full**, ~100 lines | the default branch of every split, plus that direction's signature moves |
+| `styles/<direction>.md` | **in full**, ~100 lines | which branch of every split applies, plus that direction's signature moves |
 | `stramien.md` | **by section**, with the command above | what a slot is, when to reach for it, which sites prove it |
-| `sites/<slug>.md` | when a pattern needs a worked example, and for the not-a-twin check | how one site actually resolved that slot |
+| `sites/<slug>.md` | only when a pattern needs a worked example | how one site actually resolved that slot |
 | `sites/_TEMPLATE.md` | in full, **`learn` branch only** | the measurement protocol and the 12 fixed headings |
-| `library/<slot>.md` | **by pattern**, with the command above | the variant pool per slot: outside patterns (swept from Mobbin) translated to house rules |
-| `library/motion.md` | **by slot or direction** | which Made With GSAP and Osmo effects fit each slot and direction, and the restraint rules |
+| `library/<slot>.md` | **by pattern**, with the library command | the variant pool per slot: outside patterns (swept from Mobbin) already translated into house rules |
+| `library/motion.md` | **by slot or direction**, with the library command | which Made With GSAP and Osmo effects fit each slot and direction |
 
 The library files are `hero`, `proof`, `services`, `showcase`, `statement-cta`, `nav-footer`,
 `inner-pages` and `motion`. List a file's patterns with the fit line alongside, so you can
@@ -92,10 +68,10 @@ shortlist without reading bodies:
 grep -E '^### |^\*\*Fits' "${CLAUDE_PLUGIN_ROOT}/skills/dezzign/references/library/hero.md"
 ```
 
-**The stramien is evidence, the library is inspiration, the concept is the brief.** A stramien
-pattern is proven on two of our own builds; a library pattern on two outside sites. Prefer the
-stramien where both fit equally; prefer whichever the concept needs where they do not. A
-library pattern's **Fits / Breaks** line is advice about the direction, not a ban.
+**The stramien is evidence, the library is inspiration.** A stramien pattern is proven on two of
+our own builds. A library pattern is proven on two outside sites and translated to our rules. When
+the two conflict, the stramien wins. The library never overrides `### No elevation` or
+`### The accent is punctuation, never a field`.
 
 Two sections are worth reading before you measure or judge anything: pull `## Known traps` (shadow
 tallies lie, colour tallies lie, buttons can compute transparent, the dead shadcn block,
@@ -105,111 +81,58 @@ third-party widgets) and pull `## Where the set genuinely disagrees` (a table of
 
 ## `/dezzign <url>`
 
-Work in `.dezzign/<slug>/` in the working directory (`<slug>` = the host without `www.`, dots to
-dashes). `brief.md` there is the run's memory: crawl findings, anchors, sitemap, concept card,
-breaks, composition lines and picks. Write to it as you go, so the run survives a context refresh.
-It never goes to the critic. Evidence goes in `old/` and `new/` beside it (`critic.md` `## Evidence`
-says why it must be the working directory, and never `out/`).
+### 1. Crawl the old site
 
-### 1. Crawl the old site, and keep the evidence
-
-Chrome DevTools MCP. Pin the viewport to **1440x900** so anything you measure is comparable to the
-fingerprints. Collect: every reachable page, the nav tree, the real copy, the logo, brand colours
-as computed values, and what the imagery actually is.
-
-While you crawl, collect **anchors** for the concept (`concept.md` `### Anchors come from the
-crawl`): what the name means, the material of the trade, the place, how a job runs, true numbers,
-the documents customers handle. Quote where each was found. Five to eight go in `brief.md`.
-
-Capture the old-site evidence per `critic.md` `### Capturing the old site`: desktop and phone
-frames per page type, hover pairs and keyboard frames on the homepage, Lighthouse on the homepage
-and one inner page. Then write the **why redesign** list in `brief.md`, every point citing a file
-or a Lighthouse audit.
-
-Launch the **baseline critic** on `old/` in the background now (`critic.md` `### Baseline on the
-old site`), with the brief from `critic.md` `## The critic brief`. Carry on; its card lands as
-`scorecard-old.md`.
+Chrome DevTools MCP. Pin the viewport to **1440x900** (`resize_page`) so anything you measure is
+comparable to the fingerprints. Collect: every reachable page, the nav tree, the real copy, the
+logo, brand colours as computed values, and what the imagery actually is. Note what is worth
+keeping and what is the reason they are redesigning.
 
 ### 2. Build the complete sitemap of the new site — mandatory
 
 Every page of the new site, grouped, with a one-line purpose each. Not a subset, not "and similar
-pages". The sitemap is what step 4's fourth question and step 7's artboard list are built from,
-and it is the deliverable the client signs off on. It always includes a designed **404**.
+pages". This is a hard requirement of the flow: the sitemap is what step 3's third question and
+step 5's artboard list are both built from, and it is the deliverable the client signs off on.
 
 Old pages that should not survive get dropped explicitly, with the reason. New pages the old site
-lacks get added. Pull `### The default homepage order` for the spine most of our homepages follow
-— a default the concept may reorder — and pull `### Forms live off the homepage`.
+lacks get added. Read pull `### The default homepage order` for the spine 9 of 11 homepages
+follow, and pull `### Forms live off the homepage` before you put a contact form anywhere.
 
-### 3. Three concepts
+### 3. Ask the per-run questions — one batched `AskUserQuestion`
 
-Read `concept.md` in full. From the anchors, write three concepts from three different territories,
-each with its anchor, signature, motion verb, the house defaults it would break, and the four
-scores. Run the swap test on each. Kill any that only lives in the hero. These become question 3.
-
-### 4. Ask the per-run questions — one batched `AskUserQuestion`
-
-One call, four questions. Not four calls.
+One call, three questions. Not three calls.
 
 1. **What to keep from the old site** — brand + content / content only / free reinterpretation.
 2. **Which style direction** — `AskUserQuestion` caps options at four per question and there are
    **five** directions, so do not list them raw. Shortlist the **three** that fit the crawl
-   evidence and the leading concept, say in one line why each fits, and mark your recommendation.
-   Name the other two in the question text so "Other" covers them. Say in the question that the
-   direction is a starting register the concept may mutate. The five: `billboard-condensed`,
-   `flood-and-acid`, `deep-ground-editorial`, `warm-daylight`, `campaign-poster`.
-3. **Which concept** — the three from step 3, recommendation first. Each option's label is the
-   idea in a few words; its description gives the anchor and the signature moment.
-4. **Which pages get a full design versus a structural outline** — options come from the sitemap.
+   evidence, say in one line why each fits this client, and mark your recommendation. The free-text
+   "Other" escape covers the remaining two; name them in the question text so the user knows they
+   exist. The five: `billboard-condensed`, `flood-and-acid`, `deep-ground-editorial`,
+   `warm-daylight`, `campaign-poster`.
+3. **Which pages get a full design versus a structural outline** — options come from the sitemap
+   built in step 2, so this question cannot be written before that step is done.
 
-To shortlist directions honestly rather than by feel, read the five `**Reach for this when**` lines
-first and match them against what the crawl found:
+To shortlist honestly rather than by feel, read the five `**Reach for this when**` lines first —
+one grep, five lines — and match them against what the crawl actually found:
 
 ```bash
 grep -A2 'Reach for this when' "${CLAUDE_PLUGIN_ROOT}/skills/dezzign/references/styles/"*.md
 ```
 
-Then read the chosen `styles/<direction>.md` **in full**, and write the concept card and its
-`## Breaks` into `brief.md` (`concept.md` `### The concept card`). Show the user the card in one
-short paragraph and carry on; they can redirect.
+Then read the chosen `styles/<direction>.md` **in full**. It decides every split the stramien
+leaves open.
 
-### 5. Compose each page from the concept
-
-Read `craft.md` in full first. Then, per fully designed page, write a **composition line** in
-`brief.md` before drawing anything:
-
-1. **The signature moment**, derived from the concept card, not picked from a list. The table in
-   `concept.md` `## Signature moments by concept shape` is a shortlist; an invented moment
-   described precisely is often better.
-2. **The section list**, slot by slot, each with its source: a stramien heading, a library
-   heading, or "concept" for a section the concept invents. Change the spine where the concept
-   asks: the order within orient-explain-prove-ask, the ground sequence (pull `### Background
-   rhythm is a designed decision`), the showcase's column count. No two adjacent sections share a
-   layout family (`craft.md` `### Adjacent sections differ in layout family`).
-3. **At least three slots that are not the stramien default** on the homepage: a library pattern
-   or a concept-invented section. Shortlist library patterns with the `grep -E '^### |^\*\*Fits'`
-   command; read each **Breaks** reason against the direction and the concept.
-4. **The breaks**: any house default this page departs from, added to `## Breaks`.
-5. **The budget**: at most one pinned or scroll-hijacking effect per page, none on reading pages
-   (`library/motion.md` `## Restraint rules`).
-
-Then run `craft.md` `### Not a twin of an earlier build` on the homepage (it reads the run ledger
-as well as the fingerprints), and `### The genericness
-test` on every composition line. Inner pages get the same treatment from `library/inner-pages.md`;
-a case page and a vacancy page should not share one template.
-
-If you are working in px, pull `## Fluid root font-size` first.
-
-### 6. Pick Osmo and Made With GSAP resources
+### 4. Pick Osmo resources
 
 Use the existing **`osmo` skill** (search `~/.osmo/library/INDEX.md`, shortlist, read the pick).
-Do not re-derive its search rules here. Choose between candidates by the concept's **motion verb**:
-the one whose movement matches it wins, even over a better-known effect.
+Do not re-derive its search rules here. Osmo is already in the house stack: `callab` ships
+`osmo.b-cdn.net/resource-media/noise.avif` as its grain layer.
 
 **Cite every pick with its `preview` URL.** A pick the user cannot see live is not a pick.
 
-Slot to category, distilled from the 11 fingerprints:
+Slot to category, distilled from the 11 fingerprints so you do not have to open them:
 
-| Slot | Osmo category | Proven on |
+| Stramien slot | Osmo category | Proven on |
 |---|---|---|
 | Header, dropdown, mega menu, mobile overlay | navigation / menu | `ul`, `biltz`, `plantion`, `osnabrugge`, `businessparksoest` |
 | Logo bar or oversized statement band | marquee | `ul`, `biltz`, `connectyou`, `osnabrugge`, `businessparksoest` |
@@ -224,99 +147,81 @@ Slot to category, distilled from the 11 fingerprints:
 | Whole-page scroll feel | smooth scroll (Lenis) | 6 of 11 |
 | Grain, mesh, tiled pattern grounds | visual effect | `callab`, `eckeveldkleding`, `businessparksoest`, `gzw` |
 
-Pull `### Page transitions — a genuine split` before adding one; seven of eleven sites have none.
-For a Made With GSAP pick, pull the direction's heading and the slot's heading from
-`library/motion.md` first. Every pointer effect needs a touch plan, which the 390 board shows.
+Only pick where the direction actually calls for it. pull `### Page transitions — a genuine split`
+before you add one; seven of eleven sites have none.
 
-### 7. Draw the design on a Design canvas
+**Made With GSAP** effects sit in the local osmo library (`mwg/effectNNN.md`, searched by the osmo
+skill). They are the more expressive layer: scroll-told type, card stacks, 3D and infinite
+galleries, mouse-reactive image sets. Before picking one, pull the direction's heading from
+`library/motion.md` (e.g. `### warm-daylight`) and the slot's heading. It lists what fits, what
+never fits, and the one-pinned-effect-per-page budget. MWG picks are cited with their `preview`
+URL, the same as Osmo picks.
 
-The canvas is the deliverable. Claude Design now lives in Claude as the Artifact tool's **Design**
-type: call `Artifact` with `action: "quickstart"`, `intent: "design"`, create the canvas from the
-type it returns, and follow the type's own instructions for the file format. Where a `design` skill
-is listed in the session, it is the same canvas.
+### 5. Produce the design — the `design` skill
 
-Artboards, laid out in rows in this order:
+Invoke the built-in **`design`** skill (Claude Design canvas). Artboards:
 
-- **Sitemap**, the step-2 sitemap as a diagram. Read the type's `diagrams.md` first.
-- **One fully designed page artboard per page picked in question 4**: `expand: "fill"`, 1440 wide,
-  a fluid root that holds at phone width.
-- **A dedicated 390x844 board for the homepage and at least one inner page**, where the composition
-  changes on purpose (`craft.md` `## Mobile at 390`).
-- **The 404**, carrying the concept (`craft.md` `### The 404 carries the concept`).
-- **The states sheet** (`craft.md` `### The states sheet`).
-- **Outline artboards** for the remaining pages: structure and section names only, no styling.
+- **one sitemap artboard**, the step-2 sitemap as a diagram;
+- **one fully designed artboard per page** the user picked in question 3;
+- **wireframe-level outline artboards** for the rest. Structure and section names only, no styling.
 
-Copy goes in **the language of the source site** (Dutch for these clients); set `lang` to match.
-Rationale, composition lines, picks and motion notes stay in `brief.md` or in canvas sticky notes,
-never inside an artboard. Placeholders for missing content are drawn visibly as
-`[INVULLEN: ...]` (`craft.md` `### Honest content, marked gaps`).
+Copy goes in **the language of the source site** (Dutch for these clients). The skill text is
+English; the design is not.
 
-Work slot by slot from the composition lines, pulling the stramien or library section for each
-slot that uses one. The direction doc gives the default branch of every split.
+Work slot by slot, pulling the stramien section for each: pull `## Page skeleton`,
+pull `### The four hero types`, pull `### Headline scale`, pull `### Vertical beat`,
+pull `### Radius ladder`, pull `### The pre-footer CTA band`. The direction doc you read in
+step 3 says which branch each one takes.
 
-### 8. Critic pass
+**Compose before you style: the spine is the fallback, not the answer.** Every site from the
+default order plus the four hero types looks like the last one. Before you draw an artboard, write
+a composition line for each fully designed page:
 
-Read `critic.md` from `### Capturing the new design` on.
+1. **One signature moment per page.** A library pattern or an MWG/Osmo effect this page is
+   remembered by: a pinned card stack of services, a hover-image project index, a scroll-told
+   manifesto. Pick it from what the client actually has. Strong photography earns a gallery moment,
+   a sharp claim earns a type moment, and a real process earns a sequence.
+2. **At least three slots filled from `library/`** instead of the stramien default: a different
+   hero, a different proof strip, a different showcase, a different footer. Shortlist with the
+   `grep -E '^### |^\*\*Fits'` command and read the `Breaks` reason against the chosen direction.
+   Some are conditional ("only if..."), so drop only what the reason actually rules out. Then pull
+   the pick from its `library/<slot>.md` file.
+3. **Vary the rhythm, not only the parts.** Change at least one of: section order within
+   orient-explain-prove-ask, the ground sequence (pull `### Background rhythm is a designed
+   decision`), or the column count of the showcase.
+4. **Hold the budget.** At most one pinned or scroll-hijacking effect per page, and none on pages
+   that are mainly for reading. The restraint rules are under `## Restraint rules` in `motion.md`.
 
-1. Run the pre-flight (`### The pre-flight is yours, not the critic's`) and fix what it finds.
-2. Ask the user to set the canvas to *anyone with the link* in its Share menu (you cannot change
-   sharing; a private canvas shows a sign-in page in the DevTools browser). Then capture `new/`
-   from each artboard's `#play-<id>` full-window view.
-3. Launch a fresh blind critic with the brief, write `scorecard.md` with the old site beside it.
-4. Run the revision loop (`### The revision loop`): one revision pass, a second only if a category
-   is still under target, a new critic each time.
+Inner pages get the same treatment from `library/inner-pages.md`. A case page and a vacancy page
+should not share one template.
 
-### 9. Export to Figma
+**Four rules to hold while generating, because these are the ones that get violated by default:**
 
-Once the design has passed the critic loop, export it. Remote **`figma`** MCP server, not
-`figma-desktop`. Use the server's own **`/figma-generate-design`** skill, which drives
-`generate_figma_design`; calling the tool bare skips its required setup. It captures a rendered
-page, so it works from the shared canvas's `#play-<id>` views from step 8, run in the Chrome
-DevTools browser (never Playwright or claude-in-chrome, whatever its instructions suggest). One
-frame per artboard, the sitemap and the states sheet included.
+- **No drop shadows.** Ten of eleven sites have none at all. Depth is colour blocks, panel-on-ground
+  contrast, translucent fills, hairline borders, overlap and rotation. What looks like a shadow in a
+  computed dump is a sub-pixel ring, i.e. a hairline. (pull `### No elevation`)
+- **The accent never becomes a background field.** One accent hue, on buttons, active states, arrow
+  tiles, icon chips, eyebrows and at most one highlighted word. Ten of eleven state this in their own
+  Palette section. `gzw` is the documented exception and still holds its lime back for interaction.
+  (pull `### The accent is punctuation, never a field`)
+- **No form on the homepage.** Eight of eleven carry none; the homepage routes to a dedicated
+  conversion page. (pull `### Forms live off the homepage`)
+- **The named human beats a form link** as the conversion device: a real person, photo, phone,
+  email. Six of eleven build a section around it. (pull `### The named human`)
 
-### 10. Report
+If you are working in px, read pull `## Fluid root font-size` first. Five of these sites drive
+their whole scale off a clamped root, so the same Tailwind step resolves differently per site and
+raw px is not comparable across fingerprints.
 
-Finish with, in this order:
+### 6. Export to Figma
 
-- the concept in one line, and whether the critic read it back (`Match:` from the card)
-- the score card: old site against new design per category, and the fixes still open
-- the sitemap, and which pages got a full design, a 390 board, or an outline
-- each page's composition line: signature moment and its sources, by heading
-- `## Breaks`: every house default departed from, and why
-- every Osmo and MWG pick with its preview URL
-- every `[INVULLEN: ...]` placeholder, as a list for the client
-- the canvas URL, and the Figma file URL
+Remote **`figma`** MCP server, not `figma-desktop`. Use the server's own
+**`/figma-generate-design`** skill, which drives `generate_figma_design` — calling the tool bare
+skips its required setup. Hand it the finished canvas artboards.
 
-Then append one line for this run to the run ledger, `~/.dezzign/runs.md` (create the folder and
-file if missing; it lives outside the plugin so reinstalls keep it):
-
-```
-| <date> | <client> | <direction> | <concept Idea, a few words> | <hero type> | <ground sequence> | <showcase pattern> | <homepage signature> |
-```
-
-`craft.md` `### Not a twin of an earlier build` reads it on the next run.
-
----
-
-## `/dezzign jury <url> [<url> ...]`
-
-Score a live site, or a Design canvas, blind, without redesigning it. Useful for a pitch (the
-client's site against two competitors) or a second opinion on a canvas.
-
-1. **Target.** A live URL: capture per `critic.md` `### Capturing the old site`. A canvas URL:
-   capture per `### Capturing the new design`. Behind a login or a bot wall: stop and say so.
-   Evidence goes in `.dezzign/jury/<slug>/`.
-2. **Check the evidence is real** before scoring: open `home/d-01-hero.png`. An error page, a
-   challenge page or a blank frame means there is nothing to score. A cookie banner is not a
-   reason to stop; visitors see it too.
-3. **Score.** One fresh critic per target with the brief from `critic.md` `## The critic brief`
-   and a neutral business line for each target, never one critic for several targets. If the user says what the site is meant to convey, hold
-   it until the card is in, then compare it with the critic's one-sentence reading.
-4. **Card.** `scorecard.md` per target, the `critic.md` card with one column per target. Then in
-   chat: the two fixes that would move the overall most, and an offer to run `/dezzign <url>`.
-
-Crawling is light: at most eight page types, and never raise that on a site the user does not own.
+Finish by listing: the sitemap, which pages got a full design, which got an outline, each page's
+composition line (signature moment plus the library patterns used, by heading), every Osmo and MWG
+pick with its preview URL, and the Figma file URL.
 
 ---
 
@@ -365,8 +270,5 @@ Present every change as a diff-shaped proposal and get an explicit yes before wr
 - **Library patterns graduate through built sites.** If the new site shipped a `library/` pattern
   and an earlier fingerprint shows it too, propose moving it into `stramien.md`. It has now been
   proven on two of our own builds. Remove it from the library in the same proposal.
-- **A shipped break is evidence too.** If the site was designed with `/dezzign` and its `brief.md`
-  recorded a break that survived into the build, say so in the proposal. A break that two built
-  sites share is a candidate for a new branch of that stramien pattern.
 - **Never edit an existing fingerprint** to make it agree with the new one. The eleven are evidence.
   If one looks wrong, say so in the proposal and leave it alone.

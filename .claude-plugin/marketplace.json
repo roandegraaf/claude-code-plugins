@@ -141,8 +141,8 @@
         },
         {
             "name": "dezzign",
-            "description": "Redesign a client's existing website the ZekerZichtbaar way: crawl the old site, find a concept anchored in the client's own world, build the full sitemap, pick Osmo and Made With GSAP resources, design every page plus phone boards and a states sheet on a Design canvas, score old and new with a blind critic, and export to Figma. The house 'stramien', its style directions and a Mobbin-sourced variant library are defaults the concept may break. /dezzign jury scores any site blind.",
-            "version": "0.3.0",
+            "description": "Redesign a client's existing website the ZekerZichtbaar way: crawl the old site, build the full sitemap, pick fitting Osmo and Made With GSAP resources, design every page on a Claude Design canvas and export to Figma. Encodes the recurring house 'stramien', its style directions and a Mobbin-sourced variant library.",
+            "version": "0.2.0",
             "source": "./dezzign",
             "category": "development",
             "strict": false

@@ -256,11 +256,9 @@ Run `/osmo sync` once, then `/osmo I need an infinite logo marquee for the hero`
 
 ### :triangular_ruler: Dezzign
 
-Redesign a client's existing website the ZekerZichtbaar way. `/dezzign <url>` crawls the old site with the Chrome DevTools MCP and keeps screenshots and Lighthouse findings as evidence, builds the **complete** sitemap of the new one, and writes three concepts, each anchored in a checkable fact about the client (its name, its trade, its place, how a job runs). It then asks what to keep, which style direction to start from and which concept to follow. It picks Osmo and Made With GSAP resources by the concept's motion verb and designs every page on a Design canvas, plus dedicated 390px phone boards, a designed 404 and a states sheet. A blind critic subagent scores the old site and the new design from screenshots alone, before and after, with one bounded revision pass. The final design is exported to Figma.
+Redesign a client's existing website the ZekerZichtbaar way. `/dezzign <url>` crawls the old site with the Chrome DevTools MCP, builds the **complete** sitemap of the new one, asks what to keep and which style direction to use, picks fitting Osmo resources for the hero, nav, marquee, hover and transitions, then designs every page on a Claude Design canvas and pushes it to Figma. The house "stramien" — page skeleton, 60-odd section patterns and 5 named style directions, distilled from 11 sites we built — ships as reference material the skill reads one section at a time. A variant library of outside section patterns (swept from Mobbin, translated to house rules, written out in full so no Mobbin account is needed to use it; the source links do need one) plus a motion map of Made With GSAP and Osmo effects makes every page pick a signature moment and at least three non-default sections, so redesigns stop looking alike.
 
-The house "stramien" (page skeleton, 60-odd section patterns and 5 named style directions, distilled from 11 sites we built) and a variant library of outside patterns swept from Mobbin ship as reference material the skill reads one section at a time. They are **defaults, not law**: the concept may break any of them, recorded with its reason, and a not-a-twin check stops a design from repeating an earlier build. Only a short list of fixed rules always holds: honest content, legibility, orientation, usability by hand and keyboard. The concept, craft and critic methods are adapted from [juliobsz/skills](https://github.com/juliobsz/skills) (`/awwwards` and `/jury`, MIT).
-
-Requires an Osmo membership with a synced library, the Chrome DevTools MCP, the Artifact tool's Design type (Claude Design in Claude), and the remote `figma` MCP authenticated for the export. For the critic and the Figma export to see the canvas, set it to "anyone with the link" in its Share menu when the run asks: the DevTools browser cannot sign in to claude.ai, and Claude cannot change sharing.
+Requires an Osmo membership with a synced library, the Chrome DevTools MCP, the remote `figma` MCP authenticated, and the built-in `design` skill available in the session.
 
 **Install:**
 ```bash
@@ -268,12 +266,11 @@ Requires an Osmo membership with a synced library, the Chrome DevTools MCP, the 
 ```
 
 **Commands:**
-- **`/dezzign <url>`** — Crawl with evidence, sitemap, three anchored concepts, batched questions, composition, Osmo and MWG picks, Design canvas, blind critic before and after, Figma export. One artboard per fully designed page, 390 boards for the homepage and an inner page, a 404, a states sheet, and wireframe outlines for the rest
-- **`/dezzign jury <url> [<url> ...]`** — Score a live site or a Design canvas blind, without redesigning it; several URLs give a side-by-side card (the client against competitors)
+- **`/dezzign <url>`** — Crawl, sitemap, batched questions, Osmo picks, Claude Design canvas, Figma export. One artboard per fully designed page, wireframe outlines for the self-explanatory ones
 - **`/dezzign learn <url>`** — Fingerprint a newly built site into the reference set under the fixed measurement protocol, then *propose* stramien and style-direction updates instead of applying them
 
 **Usage:**
-Run `/dezzign https://oude-site-van-de-klant.nl` and answer the four questions it batches. The run keeps its memory and evidence in `.dezzign/<client>/` in the working directory. After a new site goes live, `/dezzign learn <url>` keeps the stramien current.
+Run `/dezzign https://oude-site-van-de-klant.nl` and answer the three questions it batches; after a new site goes live, `/dezzign learn <url>` keeps the stramien current.
 
 ---
 
@@ -420,12 +417,9 @@ claude-code-plugins/
 │   │   └── plugin.json           # Plugin metadata
 │   └── skills/
 │       └── dezzign/
-│           ├── SKILL.md          # /dezzign <url> | /dezzign jury <url> | /dezzign learn <url>
+│           ├── SKILL.md          # /dezzign <url> | /dezzign learn <url>
 │           └── references/       # The ZekerZichtbaar stramien
-│               ├── concept.md    # Anchored concepts, swap test, the concept card and recorded breaks
-│               ├── craft.md      # Fixed rules, not-a-twin, mobile at 390, states sheet, type, Dutch copy
-│               ├── critic.md     # Evidence capture, rubric, blind critic brief, revision loop
-│               ├── stramien.md   # Page skeleton and section patterns, one heading per slot (defaults)
+│               ├── stramien.md   # Page skeleton and section patterns, one heading per slot
 │               ├── styles/       # 5 named style directions
 │               ├── sites/        # _TEMPLATE.md + 11 site fingerprints
 │               └── library/      # Mobbin-sourced variant patterns per slot + motion.md (MWG/Osmo map)

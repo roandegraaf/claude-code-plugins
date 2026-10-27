@@ -12,11 +12,6 @@ The redesign flow in `SKILL.md` reads these sections to choose; the style direct
 site's quirk and lives in its own fingerprint, not here. The single deliberate exception is flagged
 in-place under `### The accent is punctuation, never a field`.
 
-**Defaults, not law.** Everything here is what we reach for when the assignment gives no reason to
-do otherwise. A redesign's concept (`concept.md`) may break any of it, these two rules included,
-when the client's world asks for it; the break and its reason go in the run's `brief.md`. The only
-rules no concept breaks are the fixed rules in `craft.md`.
-
 **Measurement caveat.** All px values were measured at a pinned 1440x900. Five of these sites drive
 their whole scale off a fluid root font-size (see `## Fluid root font-size`), so the numbers are
 viewport-relative and only comparable because the viewport was pinned.
@@ -50,8 +45,7 @@ active states, arrow tiles, icon chips, eyebrow text and at most one highlighted
 becomes a section background. The large colour fields are the brand ground, the neutrals and the
 photography.
 
-**When:** by default. If the accent starts covering area without a reason, the design has lost its
-loudest tool.
+**When:** always. If the accent starts covering area, the design has lost its loudest tool.
 
 **Examples — ten of eleven, all stating it near-verbatim in their own Palette section:** `biltz`
 ("orange never fills a section"), `osnabrugge` ("strictly punctuation, gold

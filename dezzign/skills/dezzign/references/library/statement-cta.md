@@ -1,6 +1,6 @@
 # Library — Statement, CTA and people
 
-Outside inspiration from Mobbin (swept 2026-09-30), translated into house rules. Not evidence from our own builds — `stramien.md` stays the house default; this file is the variant pool that step 5 of SKILL.md draws from to avoid the default spine.
+Outside inspiration from Mobbin (swept 2026-09-30), translated into house rules. Not evidence from our own builds — `stramien.md` stays the source of truth; this file is the variant pool that step 5 of SKILL.md draws from to avoid the default spine.
 
 Covers statement and manifesto bands, big quotes, founder letters, pre-footer asks, contact-person and
 team sections, vacancy teasers and newsletter placement. The stramien already owns the centred

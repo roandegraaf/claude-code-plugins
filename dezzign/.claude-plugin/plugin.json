@@ -1,7 +1,7 @@
 {
   "name": "dezzign",
-  "version": "0.3.0",
-  "description": "Redesign a client's existing website the ZekerZichtbaar way: crawl the old site, find a concept anchored in the client's own world, build the full sitemap, pick Osmo and Made With GSAP resources and design every page, phone boards and a states sheet on a Design canvas, then score the old site and the new design with a blind critic and export to Figma. The 'stramien' (page skeleton, section patterns and style directions distilled from the sites we build) and a Mobbin-sourced variant library are defaults the concept may break with a written reason, so runs do not converge on one layout. Concept, craft and critic methods adapted from juliobsz/skills (MIT).",
+  "version": "0.2.0",
+  "description": "Redesign a client's existing website the ZekerZichtbaar way: crawl the old site, build the full sitemap, pick fitting Osmo and Made With GSAP resources and produce every page as a Claude Design canvas, then push it to Figma. Encodes the recurring 'stramien' - page skeleton, section patterns and style directions - distilled from the sites we build, plus a variant library of outside patterns swept from Mobbin so runs do not converge on one layout.",
   "author": {
     "name": "Roan de Graaf",
     "email": "info@roandegraaf.nl"
