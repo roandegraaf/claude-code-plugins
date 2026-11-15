@@ -38,6 +38,18 @@ test('a worker notification carries each status file written since load, once', 
   expect(seen[1]).toBeUndefined()
 })
 
+test('a teammate worker reporting back as a peer message gets its status file relayed too', async ($, on) => {
+  const entries: Record<string, Entry> = {
+    'docs/slides/demo': { kind: 'dir', mtimeMs: 1 },
+    'docs/slides/demo/status': { kind: 'dir', mtimeMs: 1 },
+    'docs/slides/demo/status/slice-5-2.md': { kind: 'file', mtimeMs: Date.now() + 1000, text: 'STATUS: more' },
+  }
+  fakeDisk(on, entries)
+  const seen = captureContext(on)
+  await $.prompt.submit({ text: '<teammate-message teammate_id="slice-5-2">idle</teammate-message>', origin: { kind: 'peer' } } as never)
+  expect(seen[0]?.join('\n')).toContain('slice-5-2.md (disk is authoritative):\nSTATUS: more')
+})
+
 test('status files already on disk when the mod loads are not relayed', async ($, on) => {
   on('clock.now', () => ({ value: 5000 }))
   on('session.start', ($, e) => ({ cwd: e.cwd }))

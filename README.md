@@ -223,7 +223,8 @@ Tackle large tasks as a series of one-session "slices" so output quality never d
 - **`/autopilot [slug] [review]`** — Run the whole loop autonomously via fresh per-slice `slice-worker` subagents until the Definition of Done is met; no iteration cap, no checkpoint stops. Pauses only to ask you a question, retries a crashed slice once, sends you a push notification when it stops or needs input, and never commits on its own. `review` pauses after every slice for approval. Worker status is mirrored to disk, so a dropped message never derails the loop
 - **Auto-clear** — A bundled mod refreshes the orchestrator's context after every slice: the orchestrator drops a marker, and the mod stops leftover workers, runs `/clear` and resumes the run with the same arguments, so nobody has to be at the keyboard. It won't resume when `PROGRESS.md` didn't grow since the last refresh. Requires Claude Code ≥ 2.1.287 (tested on 2.1.287) and an interactive session; elsewhere (`-p`, cloud) the skills fall back to continuation legs
 - **Run panel** — While `/autopilot` runs, a six-line pane opens on its own: the task, current slice number, elapsed time and pace per slice; Definition of Done progress with the next open item; the slice being built and for how long; what the worker is doing right now (file being edited, command running); how the last slice ended with its verification; and what is waiting on you (a question right now, checks at the end, deferred items). It survives auto-clear and closes when the task is archived
-- **Disk-truth relay** — The same mod attaches each worker's `status/*.md` file to its completion notification, so the orchestrator reads the authoritative result without nudging
+- **Disk-truth relay** — The same mod attaches each worker's `status/*.md` file to its completion notification (a task notification or a teammate's message), so the orchestrator reads the authoritative result without nudging
+- **Stall watchdog** — The mod wakes the orchestrator when a run stalls without anyone noticing: 5 minutes with no worker running and no status file from the last one (or a `more` nobody acted on), or a worker that has made no tool call in 30 minutes. The wake-up names the worker and the fix (nudge it to finish in the foreground, or stop it and re-spawn a retry); after two wake-ups on the same stall it leaves a toast for you instead. Workers never `run_in_background` what they wait on, since nothing wakes a finished worker
 - **Model split** — `slice-worker` declares `model: opus`, so builders always run on Opus; the orchestrator, continuation legs, and every verifier/reviewer inherit the session model. Run on Fable and Fable orchestrates and verifies while Opus builds
 - **`/visualize <idea>`** — Spin up a token-frugal HTML mockup on a local server during a brainstorm, with optional click-to-pick options
 
@@ -395,8 +396,8 @@ claude-code-plugins/
 │   │   └── slice-worker.md       # Per-slice subagent used by /autopilot
 │   ├── hooks/
 │   │   ├── hooks.json            # Registers the mod
-│   │   └── register.js           # Auto-clear, disk-truth relay and run panel mod
-│   ├── tests/                    # auto-clear, relay and panel tests (claude plugin test)
+│   │   └── register.js           # Auto-clear, disk-truth relay, run panel and stall watchdog mod
+│   ├── tests/                    # auto-clear, relay, panel and watchdog tests (claude plugin test)
 │   └── skills/
 │       ├── brainstorm/SKILL.md   # /brainstorm <idea>
 │       ├── implement/SKILL.md    # /implement [slug]

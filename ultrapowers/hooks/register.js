@@ -13,6 +13,15 @@ let refreshing = false
 let cwd = ''
 const live = { sliceStartedAt: null, activity: '', waiting: false }
 
+const STALL_MS = 5 * 60_000
+const HANG_MS = 30 * 60_000
+const MAX_WAKES = 2
+const ACTIVE = new Set(['pending', 'running', 'waiting'])
+const LEGIT_STOPS = new Set(['done', 'blocked', 'needs_input'])
+const watch = { idleSince: null, spawnAt: null, worker: '', lastWorkerToolAt: 0, wakes: new Map() }
+// Bookkeeping for the watchdog must never take down the refresh or the panel it sits beside.
+const stamp = $ => $.clock.now().catch(() => Date.now())
+
 const qualify = name => (name?.includes(':') ? name : `ultrapowers:${name}`)
 const userArgs = args => args.split(/\s+/).filter(word => word && word !== FLAG && word !== RESUMED)
 const withFlag = args => [...userArgs(args), FLAG].join(' ')
@@ -213,6 +222,59 @@ async function refreshPanel($) {
   $.ui.invalidate('ui.render')
 }
 
+async function newestStatusSince($, slug, since) {
+  const dir = `${await taskDir($, slug)}/status`
+  const files = (await $.fs.list(dir)).filter(f => f.kind === 'file' && f.name.endsWith('.md') && f.mtimeMs >= since)
+  const newest = files.sort((a, b) => b.mtimeMs - a.mtimeMs)[0]
+  if (!newest) return null
+  const text = await $.fs.read(`${dir}/${newest.name}`)
+  return { key: `${newest.name}@${newest.mtimeMs}`, status: text.match(/^STATUS:\s*(\S+)/m)?.[1]?.toLowerCase() ?? '?' }
+}
+
+const ifStopped = 'If you already stopped or paused this run for the person (a pause they asked for, a block, a question), reply with one line and end your turn: do not resume it.'
+
+function nudgeText(slug, worker, minutes, attempt) {
+  const action = attempt === 1
+    ? `If the slice is unfinished, SendMessage \`${worker}\` once: finish the slice now, run long commands in the foreground (Bash with \`timeout: 600000\`, never \`run_in_background\`), write the status file and end with the STATUS line. If it can't be continued, re-spawn it as \`${worker}-retry\`.`
+    : `It was already nudged once and stalled again: stop it with TaskStop and re-spawn it as \`${worker}-retry\`.`
+  return `ultrapowers watchdog: worker \`${worker}\` went quiet ${minutes} min ago without a STATUS line or a status file, and no agent is running, so the run is stalled. A worker that has gone idle does not resume on its own, and its own background-task notices do not wake it. Read \`docs/slides/${slug}/status/\` and \`git status\`. ${action} ${ifStopped}`
+}
+
+// Nothing else wakes an orchestrator that ended its turn waiting on a worker that can no longer report.
+async function watchdog($) {
+  if (!run || busy || refreshing || live.waiting || watch.idleSince == null || watch.spawnAt == null) return
+  const now = await stamp($)
+  const top = (await $.agent.list()).filter(a => !a.parentId)
+  const active = top.find(a => ACTIVE.has(a.status))
+  if (active) {
+    const quiet = now - Math.max(watch.lastWorkerToolAt, watch.spawnAt)
+    if (quiet < HANG_MS) return
+    const name = active.name ?? active.description ?? active.id
+    return wake($, `hang:${active.id}@${watch.lastWorkerToolAt}`, `ultrapowers watchdog: worker \`${name}\` (${active.status}) has made no tool call in ${Math.round(quiet / 60000)} min, so it is probably stuck on a hung command. Stop it with TaskStop, check \`docs/slides/${run.slug ?? '<slug>'}/status/\` and \`git status\`, then re-spawn it as a retry. ${ifStopped}`)
+  }
+  if (now - watch.idleSince < STALL_MS) return
+  const slug = await resolveSlug($)
+  // Finalize deletes status/ before /complete archives the task; that is an ending, not a silent worker.
+  if (!slug || !(await $.fs.exists(`${await taskDir($, slug)}/status`))) return
+  const minutes = Math.round((now - Math.max(watch.idleSince, watch.lastWorkerToolAt)) / 60000)
+  const latest = await newestStatusSince($, slug, watch.spawnAt)
+  if (!latest) {
+    const key = `silent:${watch.worker}@${watch.spawnAt}`
+    return wake($, key, nudgeText(slug, watch.worker, minutes, (watch.wakes.get(key) ?? 0) + 1))
+  }
+  if (LEGIT_STOPS.has(latest.status)) return
+  return wake($, `stuck:${latest.key}`, `ultrapowers watchdog: \`${watch.worker}\` reported \`STATUS: ${latest.status}\` ${minutes} min ago and the run has not moved since. Continue the loop: write the refresh marker, or spawn the next slice. ${ifStopped}`)
+}
+
+async function wake($, key, text) {
+  const count = watch.wakes.get(key) ?? 0
+  watch.wakes.set(key, count + 1)
+  watch.idleSince = null
+  if (count === MAX_WAKES) $.ui.toast(`ultrapowers: ${run.slug ?? 'the run'} is still stalled after ${MAX_WAKES} wake-ups; it needs you`, { timeoutMs: 60_000 })
+  if (count >= MAX_WAKES) return
+  await $.prompt.submit({ text })
+}
+
 function bar(done, total, width = 16) {
   const filled = total ? Math.round((done / total) * width) : 0
   return '█'.repeat(filled) + '░'.repeat(width - filled)
@@ -230,6 +292,8 @@ export function register(on) {
     $.clock.every(5000, () => {
       refreshPanel($).catch(() => {})
       maybeRefresh($)
+        .then(() => watchdog($))
+        .catch(err => $.ui.toast(`ultrapowers: watchdog failed (${err})`))
     })
     return next(e)
   })
@@ -259,7 +323,9 @@ export function register(on) {
   })
 
   on('prompt.submit', async ($, e, next) => {
-    const statuses = e.origin?.kind === 'task-notification' ? await freshSliceStatuses($) : []
+    // Teammate workers report back as a peer's message, not a task notification.
+    const fromWorker = e.origin?.kind === 'task-notification' || e.origin?.kind === 'peer'
+    const statuses = fromWorker ? await freshSliceStatuses($) : []
     if (statuses.length === 0) return next(e)
     const blocks = statuses.map(s => `ultrapowers: worker status file ${s.path} (disk is authoritative):\n${s.text}`)
     return next({ ...e, context: [...(e.context ?? []), ...blocks] })
@@ -270,6 +336,7 @@ export function register(on) {
     if (!run) return next(e)
     if (e.agentId) {
       try {
+        watch.lastWorkerToolAt = await stamp($)
         live.activity = describeActivity(e)
         $.ui.invalidate('ui.render')
       } catch {}
@@ -278,6 +345,8 @@ export function register(on) {
     if (e.tool === 'Agent') {
       live.sliceStartedAt = Date.now()
       live.activity = ''
+      watch.spawnAt = await stamp($)
+      watch.worker = e.name ?? e.description ?? 'the worker'
     }
     if (e.tool !== 'AskUserQuestion') return next(e)
     live.waiting = true
@@ -291,7 +360,10 @@ export function register(on) {
   })
 
   on('turn.start', async ($, e, next) => {
-    if (!e.agentId) busy = true
+    if (!e.agentId) {
+      busy = true
+      watch.idleSince = null
+    }
     return next(e)
   })
 
@@ -300,6 +372,7 @@ export function register(on) {
     if (e.agentId) return result
     busy = false
     if (e.reason === 'answer') void maybeRefresh($)
+    watch.idleSince = await stamp($)
     return result
   })
 
